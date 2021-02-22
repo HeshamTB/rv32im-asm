@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#Run assembler with python and pass all args
+#No parsing here
+/bin/python3 team-2-asm.py $@

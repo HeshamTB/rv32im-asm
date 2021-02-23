@@ -19,8 +19,16 @@ def main():
     log("Assembly file: %s" % in_file_name)
     log("Output file: %s" % out_file_name)
 
-    # Open input file
-    # Store as list/array to itirate over
+    in_lines = list()
+    with open(in_file_name, 'r') as in_file:
+        in_lines = in_file.readlines()
+    for line in in_lines:
+        line.strip()
+        if line.startswith("#"):
+            in_lines.remove(line)
+    # For testing. To be removed/changed
+    for i in range(len(in_lines)):
+        print(hex(i), in_lines[i])
 
 
 def parseArgs():

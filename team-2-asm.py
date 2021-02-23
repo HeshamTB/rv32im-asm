@@ -15,6 +15,7 @@ def main():
         log(err, prefix='ERROR')
         return 2
     log("Assembly file: %s" % args['input files'])
+    log("Output file: %s" % args['output'])
 
 
 def parseArgs():
@@ -36,6 +37,9 @@ def validArgs(args):
         if not file_name.endswith('.asm'):
             return 'Provide files with asm extension'
 
+    out_file_name = args['output']
+    if not (out_file_name.endswith('.txt') or out_file_name.endswith('.bin')):
+        return 'Output file format must be selected [txt or bin]'
     return None
 
 

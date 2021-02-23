@@ -3,15 +3,18 @@
 import sys, argparse
 
 print("RISC-V RV32IM assembler (Team 2)")
+verbose = False
 
 
 def main():
+    global verbose
     args = parseArgs()
     err = validArgs(args)
+    verbose = args['verbose']
     if err is not None:
-        print(err)
+        log(err, prefix='ERROR')
         return 2
-    print("Assembly file: %s" % args['input files'])
+    log("Assembly file: %s" % args['input files'])
 
 
 def parseArgs():
@@ -31,10 +34,14 @@ def validArgs(args):
 
     for file_name in args['input files']:
         if not file_name.endswith('.asm'):
-            return 'Provide files with asm extention'
+            return 'Provide files with asm extension'
 
     return None
 
+
+def log(msg, prefix='INFO'):
+    if verbose or prefix == 'ERROR':
+        print("[%s]" % prefix, msg)
 
 
 if __name__ == '__main__':

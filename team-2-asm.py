@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, argparse
+import argparse
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
@@ -14,8 +14,13 @@ def main():
     if err is not None:
         log(err, prefix='ERROR')
         return 2
-    log("Assembly file: %s" % args['input files'])
-    log("Output file: %s" % args['output'])
+    in_file_name = args['input files'][0]  # One file
+    out_file_name = args['output']
+    log("Assembly file: %s" % in_file_name)
+    log("Output file: %s" % out_file_name)
+
+    # Open input file
+    # Store as list/array to itirate over
 
 
 def parseArgs():

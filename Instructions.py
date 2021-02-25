@@ -2,12 +2,16 @@
 # the binary representation.
 # However, only 'R' and 'I' types are working currently
 
+# TO DO:
+#   Very important: for imddeiate shift operations, we need to use only lower 5 bits (produce 32 shift)
+#   ... not like the tables that use lower 6 bits (they have 64 bit cpu, but we are designing 32-bit cpu)
 
 # -------------------------Class------------------------ #
 class Instruction:
 
     # Init
-    def __init__(self, frmt='R', imm='0', func7='0', rs2='0', rs1='0', func3='0', rd='0'):
+    def __init__(self, instr, frmt='R', imm='0', func7='0', rs2='0', rs1='0', func3='0', rd='0'):
+        self.instr = instr
         self.imm = imm
         self.func7 = func7
         self.rs2 = rs2
@@ -25,17 +29,36 @@ class Instruction:
             opcode = '0010011'  # Not all I has this opcode, fix this
             return self.imm + self.rs1 + self.func3 + self.rd + opcode
         elif self.frmt == 'S':
-            opcode = '0100011'  # Type S immediate should be divided into two sections, fix this
-            return self.imm + self.rs2 + self.rs1 + self.func3 + self.imm + opcode
+            opcode = '0100011'
+            temp = self.imm[::-1]
+            lower_imm = temp[4::-1]
+            upper_imm = temp[11:4]  # from bit 11 to bit 5 (4 is not included)
+            return upper_imm + self.rs2 + self.rs1 + self.func3 + lower_imm + opcode
         elif self.frmt == 'B':
             opcode = '1100011'  # Type B immediate should be divided into two sections, fix this
-            return self.imm + self.rs2 + self.rs1 + self.func3 + self.imm + opcode
+            # note: Need to ask about why there is no (bit 0) in immediate here.
+            temp = self.imm[::-1]
+            imm_11 = temp[11]
+            imm_4 = temp[4:0]  # from bit 4 to bit 1 (0 is not included)
+            imm_10 = temp[10:4]  # from bit 10 to bit 5 (4 is not included)
+            imm_12 = temp[12]
+            return imm_12 + imm_10 + self.rs2 + self.rs1 + self.func3 + imm_4 + imm_11 + opcode
         elif self.frmt == 'U':
-            opcode = '0110111'  # Not all U has this opcode, fix this
-            return self.imm + self.rd + opcode
+            temp = self.imm[::-1]
+            upper_imm = temp[31:11:-1]
+            if self.instr == "lui":
+                opcode = '0110111'
+            else:
+                opcode = '0010111'
+            return upper_imm + self.rd + opcode
         elif self.frmt == 'J':
             opcode = '1101111'
-            return self.imm + self.rd + opcode
+            temp = self.imm[::-1]
+            imm_20 = temp[20]
+            imm_19 = temp[19:11]
+            imm_11 = temp[11]
+            imm_10 = temp[10:0]  # 1 is not included
+            return imm_20 + imm_10 + imm_11 + imm_19 + self.rd + opcode
 
 
 # ----------------------------- Main Dictionary ----------------------- #
@@ -94,20 +117,19 @@ for key, value in all_instructions.items():  # loop over all types
             # Pass the data to class Instruction based on format (for example frmt J doesn't need func3 but R needs it)
             # Then print the binary
             if key == 'R':
-                print(Instruction(frmt=key, func7=v['func7'], func3=v['func3'],
-                                  rd='00000', rs1='00001', rs2='00010').to_binary())  # rd, rs1, rs2 are user inputs
+                print(Instruction(instr=v['inst'], frmt=key, func7=v['func7'], rs2='00010', rs1='00001', func3=v['func3'],
+                                  rd='00000').to_binary())  # rd, rs1, rs2 are user inputs
             elif key == 'I':
-                print(Instruction(frmt=key, func3=v['func3'],
-                                  rd='00000', rs1='00001', imm='00000000001').to_binary())  # rd,rs1,imm are user inputs
+                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs1='00001', func3=v['func3'], rd='00000').to_binary())  # rd,rs1,imm are user inputs
             elif key == 'S':
                 # rd, rs1, rs2, imm are user inputs
-                print(Instruction(frmt=key, func3=v['func3'],
-                                  rd='00000', rs1='00001', rs2='10000', imm='00000000001').to_binary())
+                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
+                                  rd='00000').to_binary())
             elif key == 'B':
                 # rd, rs1, rs2, imm are user inputs
-                print(Instruction(frmt=key, func3=v['func3'],
-                                  rd='00000', rs1='00001', rs2='10000', imm='00000000001').to_binary())
+                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
+                                  rd='00000').to_binary())
             elif key == 'U':
-                print(Instruction(frmt=key, rd='00000', imm='00000000001').to_binary())  # rd, imm are user inputs
+                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs
             elif key == 'J':
-                print(Instruction(frmt=key, rd='00000', imm='00000000001').to_binary())  # rd, imm are user inputs
+                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs

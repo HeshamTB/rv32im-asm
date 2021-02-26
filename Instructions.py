@@ -6,6 +6,8 @@
 #   Very important: for imddeiate shift operations, we need to use only lower 5 bits (produce 32 shift)
 #   ... not like the tables that use lower 6 bits (they have 64 bit cpu, but we are designing 32-bit cpu)
 
+# for the immediate, i think we should sign extend it to 32 bits, then do whatever shifting we need.
+
 # -------------------------Class------------------------ #
 class Instruction:
 
@@ -25,39 +27,48 @@ class Instruction:
         if self.frmt == 'R':
             opcode = '0110011'
             return self.func7 + self.rs2 + self.rs1 + self.func3 + self.rd + opcode
+
         elif self.frmt == 'I':
             opcode = '0010011'  # Not all I has this opcode, fix this
             return self.imm + self.rs1 + self.func3 + self.rd + opcode
+
         elif self.frmt == 'S':
             opcode = '0100011'
             temp = self.imm[::-1]
             lower_imm = temp[4::-1]
             upper_imm = temp[11:4]  # from bit 11 to bit 5 (4 is not included)
             return upper_imm + self.rs2 + self.rs1 + self.func3 + lower_imm + opcode
+
         elif self.frmt == 'B':
             opcode = '1100011'  # Type B immediate should be divided into two sections, fix this
             # note: Need to ask about why there is no (bit 0) in immediate here.
-            temp = self.imm[::-1]
+
+            # Note: The immediate should be decided in main class not here. it will be 13 bit signed binary. and it will
+            # represent the differance between the two lines (the branch and current instruction)
+            # meaning, if the difference is 4 instructions, so the immediate should be 16 (pos or neg depending
+            # on position)
+
+            temp = '0' + self.imm[::-1]  # the zero is like shift lift by 1
             imm_11 = temp[11]
-            imm_4 = temp[4:0]  # from bit 4 to bit 1 (0 is not included)
-            imm_10 = temp[10:4]  # from bit 10 to bit 5 (4 is not included)
+            imm_4 = temp[4:0:-1]  # from bit 4 to bit 1 (0 is not included)
+            imm_10 = temp[10:4:-1]  # from bit 10 to bit 5 (4 is not included)
             imm_12 = temp[12]
             return imm_12 + imm_10 + self.rs2 + self.rs1 + self.func3 + imm_4 + imm_11 + opcode
+
         elif self.frmt == 'U':
-            temp = self.imm[::-1]
-            upper_imm = temp[31:11:-1]
             if self.instr == "lui":
                 opcode = '0110111'
             else:
                 opcode = '0010111'
-            return upper_imm + self.rd + opcode
+            return self.imm + self.rd + opcode
+
         elif self.frmt == 'J':
             opcode = '1101111'
-            temp = self.imm[::-1]
+            temp = '0' + self.imm[::-1]  # the zero is like shift lift by 1
             imm_20 = temp[20]
-            imm_19 = temp[19:11]
+            imm_19 = temp[19:11:-1]
             imm_11 = temp[11]
-            imm_10 = temp[10:0]  # 1 is not included
+            imm_10 = temp[10:0:-1]  # 0 is not included
             return imm_20 + imm_10 + imm_11 + imm_19 + self.rd + opcode
 
 

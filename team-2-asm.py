@@ -5,6 +5,7 @@ import Instructions
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
+start_address = 0x00400000
 
 
 def main():
@@ -22,15 +23,18 @@ def main():
 
     # Split to into methods and modules
     in_lines = list()
-    #in_words = list() # list of lists words per line
-    out_binary_string = list() # Could use the index as address
+    out_binary_string = list()
     with open(in_file_name, 'r') as in_file:
         in_lines = in_file.readlines()
+    for line in in_lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            pass
 
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
         in_lines[i] = re.sub(r'(^[ \t]+|[ \t]+(?=:))', '', in_lines[i], flags=re.M)
-        #print(hex(i), in_lines[i].split())
+        log('{} {}'.format(hex(i),  in_lines[i].split()))
         if not in_lines[i].split():
             continue
         # in_words.append(in_lines[i].split())
@@ -45,6 +49,7 @@ def main():
 
     for entry in out_binary_string:
         print(entry.to_binary())
+
 
 def parseArgs():
     out_file_parser = argparse.ArgumentParser(add_help=False)
@@ -71,7 +76,7 @@ def validArgs(args):
     return None
 
 
-def log(msg, prefix='INFO'):
+def log(*msg, prefix='INFO'):
     if verbose or prefix == 'ERROR':
         print("[%s]" % prefix, msg)
 

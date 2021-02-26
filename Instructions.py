@@ -108,28 +108,29 @@ all_instructions = {'R': [{'inst': 'add', 'func3': '000',  'func7': '0000000'},
 
                     'J': [{'inst': 'jal'}]}
 
+if __name__ == '__main__':
 
-# ----------------------- Testing Area ------------------------ #
-test = 'add'
-for key, value in all_instructions.items():  # loop over all types
-    for v in value:  # loop over all instructions inside a certain type
-        if v['inst'] == test:  # if the value corresponding to the key 'inst' is identical to the input:
-            # Pass the data to class Instruction based on format (for example frmt J doesn't need func3 but R needs it)
-            # Then print the binary
-            if key == 'R':
-                print(Instruction(instr=v['inst'], frmt=key, func7=v['func7'], rs2='00010', rs1='00001', func3=v['func3'],
-                                  rd='00000').to_binary())  # rd, rs1, rs2 are user inputs
-            elif key == 'I':
-                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs1='00001', func3=v['func3'], rd='00000').to_binary())  # rd,rs1,imm are user inputs
-            elif key == 'S':
-                # rd, rs1, rs2, imm are user inputs
-                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
-                                  rd='00000').to_binary())
-            elif key == 'B':
-                # rd, rs1, rs2, imm are user inputs
-                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
-                                  rd='00000').to_binary())
-            elif key == 'U':
-                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs
-            elif key == 'J':
-                print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs
+    # ----------------------- Testing Area ------------------------ #
+    test = 'add'
+    for key, value in all_instructions.items():  # loop over all types
+        for v in value:  # loop over all instructions inside a certain type
+            if v['inst'] == test:  # if the value corresponding to the key 'inst' is identical to the input:
+                # Pass the data to class Instruction based on format (for example frmt J doesn't need func3 but R needs it)
+                # Then print the binary
+                if key == 'R':
+                    print(Instruction(instr=v['inst'], frmt=key, func7=v['func7'], rs2='00010', rs1='00001', func3=v['func3'],
+                                      rd='00000').to_binary())  # rd, rs1, rs2 are user inputs
+                elif key == 'I':
+                    print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs1='00001', func3=v['func3'], rd='00000').to_binary())  # rd,rs1,imm are user inputs
+                elif key == 'S':
+                    # rd, rs1, rs2, imm are user inputs
+                    print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
+                                      rd='00000').to_binary())
+                elif key == 'B':
+                    # rd, rs1, rs2, imm are user inputs
+                    print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rs2='10000', rs1='00001', func3=v['func3'],
+                                      rd='00000').to_binary())
+                elif key == 'U':
+                    print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs
+                elif key == 'J':
+                    print(Instruction(instr=v['inst'], frmt=key, imm='00000000001', rd='00000').to_binary())  # rd, imm are user inputs

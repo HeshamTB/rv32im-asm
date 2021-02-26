@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import argparse
+import argparse, re
+import Instructions
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
@@ -19,17 +20,31 @@ def main():
     log("Assembly file: %s" % in_file_name)
     log("Output file: %s" % out_file_name)
 
+    # Split to into methods and modules
     in_lines = list()
+    #in_words = list() # list of lists words per line
+    out_binary_string = list() # Could use the index as address
     with open(in_file_name, 'r') as in_file:
         in_lines = in_file.readlines()
-    for line in in_lines:
-        line.strip()
-        if line.startswith("#"):
-            in_lines.remove(line)
-    # For testing. To be removed/changed
-    for i in range(len(in_lines)):
-        print(hex(i), in_lines[i])
 
+    for i in range(len(in_lines)):
+        in_lines[i] = in_lines[i].strip()
+        in_lines[i] = re.sub(r'(^[ \t]+|[ \t]+(?=:))', '', in_lines[i], flags=re.M)
+        #print(hex(i), in_lines[i].split())
+        if not in_lines[i].split():
+            continue
+        # in_words.append(in_lines[i].split())
+        # not efficient, refactor
+        for inst_type, instructions in Instructions.all_instructions.items():
+            for instruction in instructions:
+                word = in_lines[i].split()[0]
+                if word == instruction['inst']:
+                    print("Found", word, instruction['inst'])
+                    out_binary_string.append(
+                        Instructions.Instruction(instruction['inst']))
+
+    for entry in out_binary_string:
+        print(entry.to_binary())
 
 def parseArgs():
     out_file_parser = argparse.ArgumentParser(add_help=False)

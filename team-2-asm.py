@@ -5,7 +5,9 @@ import Instructions
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
-start_address = 0x00400000
+# Following RARS Simulator
+text_start_address = 0x00400000
+date_start_address = 0x10010000
 
 
 def main():
@@ -34,7 +36,7 @@ def main():
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
         in_lines[i] = re.sub(r'(^[ \t]+|[ \t]+(?=:))', '', in_lines[i], flags=re.M)
-        log('{} {}'.format(hex(i),  in_lines[i].split()))
+        log('{} {}'.format(hex(i), in_lines[i].split()))
         if not in_lines[i].split():
             continue
         # in_words.append(in_lines[i].split())
@@ -49,6 +51,31 @@ def main():
 
     for entry in out_binary_string:
         print(entry.to_binary())
+
+
+def calculateLabels(lines, section) -> dict:
+    """
+     Calculate address for each label in lines
+     :returns dict with 'label:' : address
+     This assumes all instructions are real RISC-V 32-bit instructions.
+     Thus, adding 4 between each instruction.
+    """
+    address = date_start_address
+    label_pattern = re.compile('[a-zA-Z0-9]+:')
+    label_mapping = dict()
+    if section == 'data':
+        address = date_start_address
+    else:
+        address = text_start_address
+    for i in range(len(lines)):
+        poten_label = label_pattern.match(lines[i])
+        if poten_label:
+            label = poten_label.group()
+            # Add label with address+4 since nothing should be after the label. We hope.
+            label_mapping[label] = address + 0x04
+        else:
+            address += 0x04  # Not a label
+    return label_mapping
 
 
 def parseArgs():

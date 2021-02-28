@@ -28,8 +28,24 @@ class Instruction:
             opcode = '0110011'
             return self.func7 + self.rs2 + self.rs1 + self.func3 + self.rd + opcode
 
-        elif self.frmt == 'I':
-            opcode = '0010011'  # Not all I has this opcode, fix this
+        elif self.frmt == 'I':  # Fixed, but slli-srli=srai might need better solution.
+            if self.instr[0] == 'l':  # A load instruction
+                opcode = '0000011'
+            elif self.instr == 'jalr':
+                opcode = '1100111'
+            elif self.instr == 'ecall':
+                return '00000000000000000000000001110011'
+            elif self.instr == 'ebreak':
+                return '00000000000100000000000001110011'
+            else:  # normal immediate instruction
+                opcode = '0010011'
+
+            if self.instr == 'slli' or self.instr == 'srli':
+                self.imm = self.imm[::-1]
+                self.imm = '0000000' + self.imm[4::-1]
+            elif self.instr == 'srai':
+                self.imm = self.imm[::-1]
+                self.imm = '0100000' + self.imm[4::-1]
             return self.imm + self.rs1 + self.func3 + self.rd + opcode
 
         elif self.frmt == 'S':
@@ -39,16 +55,12 @@ class Instruction:
             upper_imm = temp[11:4]  # from bit 11 to bit 5 (4 is not included)
             return upper_imm + self.rs2 + self.rs1 + self.func3 + lower_imm + opcode
 
-        elif self.frmt == 'B':
-            opcode = '1100011'  # Type B immediate should be divided into two sections, fix this
-            # note: Need to ask about why there is no (bit 0) in immediate here.
-
-            # Note: The immediate should be decided in main class not here. it will be 13 bit signed binary. and it will
-            # represent the differance between the two lines (the branch and current instruction)
-            # meaning, if the difference is 4 instructions, so the immediate should be 16 (pos or neg depending
-            # on position)
-
-            temp = '0' + self.imm[::-1]  # the zero is like shift lift by 1
+        elif self.frmt == 'B':  # Fixed
+            opcode = '1100011'
+            # Note: The immediate will be 12 bit signed binary. we will sign-extend it one bit left, then choose ...
+            # only bits 12:1 excluding bit 0, which is always equal to 0
+            temp = self.imm[::-1]
+            temp = temp[11] + temp  # set bit 12 to be the same as bit 11 (sign extension by one bit)
             imm_11 = temp[11]
             imm_4 = temp[4:0:-1]  # from bit 4 to bit 1 (0 is not included)
             imm_10 = temp[10:4:-1]  # from bit 10 to bit 5 (4 is not included)
@@ -64,7 +76,8 @@ class Instruction:
 
         elif self.frmt == 'J':
             opcode = '1101111'
-            temp = '0' + self.imm[::-1]  # the zero is like shift lift by 1
+            temp = self.imm[::-1]
+            temp = temp[19] + temp  # set bit 20 to be the same as bit 19 (sign extension by one bit)
             imm_20 = temp[20]
             imm_19 = temp[19:11:-1]
             imm_11 = temp[11]

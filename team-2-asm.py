@@ -71,6 +71,7 @@ def calculateLabels(lines, section) -> dict:
         poten_label = label_pattern.match(lines[i])
         if poten_label:
             label = poten_label.group()
+            label.replace(':', '')  # Remove trailing colon 'label:' -> 'label'
             # Add label with address+4 since nothing should be after the label. We hope.
             label_mapping[label] = address + 0x04
         else:

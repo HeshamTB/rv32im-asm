@@ -5,7 +5,9 @@ import Instructions
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
-start_address = 0x00400000
+# Following RARS Simulator
+text_start_address = 0x00400000
+date_start_address = 0x10010000
 
 
 def main():
@@ -26,15 +28,13 @@ def main():
     out_binary_string = list()
     with open(in_file_name, 'r') as in_file:
         in_lines = in_file.readlines()
-    for line in in_lines:
-        line = line.strip()
-        if not line or line.startswith('#'):
-            pass
 
+    in_lines = stripEscapeChars(in_lines)
+    labels = calculateLabels(in_lines, 'text')
+    log(labels)
+    address = text_start_address
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
-        in_lines[i] = re.sub(r'(^[ \t]+|[ \t]+(?=:))', '', in_lines[i], flags=re.M)
-        log('{} {}'.format(hex(i),  in_lines[i].split()))
         if not in_lines[i].split():
             continue
         # in_words.append(in_lines[i].split())
@@ -43,12 +43,42 @@ def main():
             for instruction in instructions:
                 word = in_lines[i].split()[0]
                 if word == instruction['inst']:
-                    print("Found", word, instruction['inst'])
+                    # print("Found", word, instruction['inst'])
+                    # TODO: check if pseudo inst
+
+                    address += 4
                     out_binary_string.append(
                         Instructions.Instruction(instruction['inst']))
 
-    for entry in out_binary_string:
-        print(entry.to_binary())
+    # for entry in out_binary_string:
+    #    print(entry.to_binary())
+
+
+def calculateLabels(lines, section) -> dict:
+    """
+     Calculate address for each label in lines
+     :returns dict with 'label:' : address
+     This assumes all instructions are real RISC-V 32-bit instructions.
+     Thus, adding 4 between each instruction.
+    """
+    address = date_start_address
+    label_pattern = re.compile('[a-zA-Z0-9]+:')
+    label_mapping = dict()
+    if section == 'data':
+        address = date_start_address
+    else:
+        address = text_start_address
+    for i in range(len(lines)):
+        poten_label = label_pattern.match(lines[i])
+        if poten_label:
+            label = poten_label.group().replace(':', '')
+            # Add label with address+4 since nothing should be after the label. We hope.
+            label_mapping[label] = address + 0x04
+            # log("(%s) @ %s" % (label, hex(address)))
+        else:
+            address += 0x04  # Not a label
+    log('Located and mapped labels %s' % label_mapping)
+    return label_mapping
 
 
 def parseArgs():
@@ -76,9 +106,18 @@ def validArgs(args):
     return None
 
 
-def log(*msg, prefix='INFO'):
+def stripEscapeChars(lines) -> list:
+    cleared_lines = list()
+    for line in lines:
+        line_mod = line.strip('\n')
+        line_mod = line_mod.strip('\t')
+        cleared_lines.append(line_mod)
+    return cleared_lines
+
+
+def log(msg, prefix='INFO'):
     if verbose or prefix == 'ERROR':
-        print("[%s]" % prefix, msg)
+        print("[%s] %s" % (prefix, msg))
 
 
 if __name__ == '__main__':

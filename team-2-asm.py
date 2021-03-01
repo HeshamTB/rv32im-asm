@@ -2,12 +2,19 @@
 
 import argparse, re
 import Instructions
+from Instructions import Instruction, all_instructions
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
 # Following RARS Simulator
 text_start_address = 0x00400000
 date_start_address = 0x10010000
+regs = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1',
+        'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4',
+        's5', 's6', 's7', 's8', 's9', ' s10', 's11', 't3', 't4', 't5', 't6', 'pc']
+regs_bin = dict()
+for i in range(len(regs)):
+    regs_bin[regs[i]] = "{0:05b}".format(i)
 
 
 def main():
@@ -35,23 +42,48 @@ def main():
     address = text_start_address
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
-        if not in_lines[i].split():
+        if not in_lines[i].split() or isLabel(in_lines[i]):
             continue
         # in_words.append(in_lines[i].split())
         # not efficient, refactor
-        for inst_type, instructions in Instructions.all_instructions.items():
+        for inst_type, instructions in all_instructions.items():
             for instruction in instructions:
                 word = in_lines[i].split()[0]
                 if word == instruction['inst']:
-                    # print("Found", word, instruction['inst'])
-                    # TODO: check if pseudo inst
-
+                    args = listInstrArgs(in_lines[i])
+                    # if not args: continue
+                    inst = instruction['inst']
+                    print(args)
+                    if inst_type == 'R':
+                        out_binary_string.append(
+                            Instruction(instr=inst,
+                                        frmt=inst_type,
+                                        rd=getRegBin(args[0]),
+                                        rs1=getRegBin(args[1]),
+                                        rs2=getRegBin(args[2]),
+                                        func3=instruction['func3'],
+                                        func7=instruction['func7']))
+                    elif inst_type == 'I':
+                        if not args: # ecall, ebreak ...
+                            print(inst)
+                            out_binary_string.append(Instruction(instr=inst,frmt=inst_type))
+                        else:
+                            rd = getRegBin(args[0])
+                            rs1 = getRegBin(args[1])
+                            imm = formatImm(args[2], 12)
+                            imm = "{0:012b}".format(int(imm))
+                            log('rd: %s, rs1: %s, imm: %s' % (rd, rs1, imm))
+                            out_binary_string.append(
+                                Instruction(instr=inst,
+                                            frmt=inst_type,
+                                            rd=rd,
+                                            rs1=rs1,
+                                            imm=imm,
+                                            func3=instruction['func3']))
                     address += 4
-                    out_binary_string.append(
-                        Instructions.Instruction(instruction['inst']))
 
-    # for entry in out_binary_string:
-    #    print(entry.to_binary())
+    for entry in out_binary_string:
+        print(entry.to_binary())
 
 
 def calculateLabels(lines, section) -> dict:
@@ -81,6 +113,58 @@ def calculateLabels(lines, section) -> dict:
     return label_mapping
 
 
+def listInstrArgs(line) -> list:
+    """
+    :param line: line of instr and operands
+    :return: list of operands without instr
+    """
+    args = list()
+    words = line.split()
+    for i in range(len(words)):
+        if i == 0:
+            continue
+        args.append(words[i].replace(',', ''))
+    return args
+
+
+def getRegBin(reg) -> str:
+    if reg.startswith('x'):
+        reg = reg.replace('x', '')
+        return regs_bin[regs[reg]]
+    else:
+        if regs_bin[reg]:
+            return regs_bin[reg]
+        else:
+            log('Unknown register', prefix='ERROR')
+            return None
+
+
+def formatImm(val, bits):
+    if val.startswith('0b'):
+        val = val[2:]
+        val = int(val, 2)
+        return twos_comp(val, bits)
+    elif val.startswith('0x'):
+        val = val[2:]
+        val = int(val, 16)
+        return twos_comp(val, bits)
+    else:
+        try:
+            val = int(val)
+            return twos_comp(val, bits)
+        except ValueError:
+            log('Can not recognize imm value %s. Defaulting to zero' % val, prefix='ERROR')
+            return 0
+
+
+def isLabel(line) -> bool:
+    label_pattern = re.compile('[a-zA-Z0-9]+:')
+    l = label_pattern.match(line)
+    if not l:
+        return False
+    return True
+
+
 def parseArgs():
     out_file_parser = argparse.ArgumentParser(add_help=False)
     out_file_parser.add_argument('-o', '--output', type=str, help='Output_file', metavar='Output_file', required=True)
@@ -90,6 +174,12 @@ def parseArgs():
     parser.add_argument('input files', metavar='File_name', type=str, nargs='*')
     par = parser.parse_args()
     return vars(par)
+
+
+def twos_comp(val, bits):
+    if (val & (1 << (bits - 1))) != 0:
+        val = val - (1 << bits)
+    return val
 
 
 def validArgs(args):

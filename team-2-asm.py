@@ -52,6 +52,7 @@ def main():
             for instruction in instructions:
                 word = in_lines[i].split()[0]
                 if word == instruction['inst']:
+                    log('%s %s' % (hex(address), word))
                     args = listInstrArgs(in_lines[i])
                     # if not args: continue
                     inst = instruction['inst']
@@ -83,7 +84,25 @@ def main():
                                             imm=imm,
                                             func3=instruction['func3']))
                     elif inst_type == 'S':
-                        pass
+                        continue
+                    elif inst_type == 'B': # Reg, Reg, Address
+                        rs1 = getRegBin(args[0])
+                        rs2 = getRegBin(args[1])
+                        imm = formatImm(args[2], 32) # Here the value is abs Address. From ISA PC += imm. imm is distance
+                        delta = address - imm << 1 # TODO check bit 0
+                        print("delta", hex(delta))
+                        # TODO check if delta is higher then 12-bits
+                        imm = "{0:012b}".format(delta)
+                        print('Delta bin', imm)
+                        out_binary_string.append(
+                            Instruction(instr=inst,
+                                        frmt=inst_type,
+                                        rs1=rs1,
+                                        rs2=rs2,
+                                        imm=imm,
+                                        func3=instruction['func3']))
+                    else:
+                        continue
                     address += 4
 
     for entry in out_binary_string:

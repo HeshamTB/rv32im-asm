@@ -39,6 +39,8 @@ def main():
     in_lines = stripEscapeChars(in_lines)
     labels = calculateLabels(in_lines, 'text')
     log(labels)
+    in_lines = replaceLabels(labels, in_lines)
+    print(in_lines)
     address = text_start_address
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
@@ -64,9 +66,9 @@ def main():
                                         func3=instruction['func3'],
                                         func7=instruction['func7']))
                     elif inst_type == 'I':
-                        if not args: # ecall, ebreak ...
-                            print(inst)
-                            out_binary_string.append(Instruction(instr=inst,frmt=inst_type))
+                        if not args:  # ecall, ebreak ...
+                            log('%s @ %s' % (inst, address))
+                            out_binary_string.append(Instruction(instr=inst, frmt=inst_type))
                         else:
                             rd = getRegBin(args[0])
                             rs1 = getRegBin(args[1])
@@ -80,6 +82,8 @@ def main():
                                             rs1=rs1,
                                             imm=imm,
                                             func3=instruction['func3']))
+                    elif inst_type == 'S':
+                        pass
                     address += 4
 
     for entry in out_binary_string:
@@ -125,6 +129,18 @@ def listInstrArgs(line) -> list:
             continue
         args.append(words[i].replace(',', ''))
     return args
+
+
+def replaceLabels(labels_locations, lines) -> list:
+    for i in range(len(lines)):
+        args = listInstrArgs(lines[i])
+        for arg in args:
+            if arg in labels_locations:
+                lines[i] = lines[i].replace(arg, str(labels_locations[arg]))
+            else:
+                continue
+
+    return lines
 
 
 def getRegBin(reg) -> str:

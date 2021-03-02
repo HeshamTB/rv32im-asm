@@ -77,7 +77,9 @@ def main():
                             rd = getRegBin(args[0])
                             rs1 = getRegBin(args[1])
                             imm = formatImm(args[2])
-                            imm = "{0:012b}".format(int(imm))
+                            imm = intbv(imm, max=4095)[12:]
+                            imm_delta_bin = int(intbv(int(imm), max=4095)[12:])  # TODO improper sign ext. (00011111)
+                            imm = "{0:012b}".format(imm_delta_bin)
                             log('PC: %s, inst: %s, rd: %s, rs1: %s, imm: %s' % (address, inst, rd, rs1, imm))
                             out_binary_string.append(
                                 Instruction(instr=inst,
@@ -94,9 +96,10 @@ def main():
                         rs2 = getRegBin(args[1])
                         imm = formatImm(args[2])
                         imm_delta = imm - address
-                        log('PC: %s, inst: %s, rs1: %s, rs2: %s, imm: %s, delta: %s' % (address, inst, rs1,rs2, imm, imm_delta))
                         imm_delta_bin = int(intbv(int(imm_delta))[12:])
                         imm = "{0:012b}".format(imm_delta_bin)
+                        log('PC: %s, inst: %s, rs1: %s, rs2: %s, imm: %s, delta: %s' % (
+                            address, inst, rs1, rs2, imm, imm_delta))
                         out_binary_string.append(
                             Instruction(instr=inst,
                                         frmt=inst_type,

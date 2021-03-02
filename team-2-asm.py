@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import argparse, re
-import Instructions
 from Instructions import Instruction, all_instructions
+from myhdl import intbv
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
 # Following RARS Simulator
 text_start_address = 0x00400000
-date_start_address = 0x10010000
+data_start_address = 0x10010000
 regs = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1',
         'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4',
         's5', 's6', 's7', 's8', 's9', ' s10', 's11', 't3', 't4', 't5', 't6', 'pc']
@@ -41,10 +41,11 @@ def main():
     log(labels)
     in_lines = replaceLabels(labels, in_lines)
     print(in_lines)
-    address = text_start_address
+    address = text_start_address  # Account for data sec
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
         if not in_lines[i].split() or isLabel(in_lines[i]):
+            log('Skipped line %s PC %s' % (in_lines[i], address))
             continue
         # in_words.append(in_lines[i].split())
         # not efficient, refactor
@@ -52,12 +53,14 @@ def main():
             for instruction in instructions:
                 word = in_lines[i].split()[0]
                 if word == instruction['inst']:
-                    log('%s %s' % (hex(address), word))
                     args = listInstrArgs(in_lines[i])
                     # if not args: continue
                     inst = instruction['inst']
-                    print(args)
                     if inst_type == 'R':
+                        rd = getRegBin(args[0])
+                        rs1 = getRegBin(args[1])
+                        rs2 = getRegBin(args[2])
+                        log('PC: %s, inst: %s, rd: %s, rs1: %s, rs2: %s' % (address, inst, rd, rs1, rs2))
                         out_binary_string.append(
                             Instruction(instr=inst,
                                         frmt=inst_type,
@@ -73,9 +76,11 @@ def main():
                         else:
                             rd = getRegBin(args[0])
                             rs1 = getRegBin(args[1])
-                            imm = formatImm(args[2], 12)
-                            imm = "{0:012b}".format(int(imm))
-                            log('rd: %s, rs1: %s, imm: %s' % (rd, rs1, imm))
+                            imm = formatImm(args[2])
+                            imm = intbv(imm, max=4095)[12:]
+                            imm_delta_bin = int(intbv(int(imm), max=4095)[12:])  # TODO improper sign ext. (00011111)
+                            imm = "{0:012b}".format(imm_delta_bin)
+                            log('PC: %s, inst: %s, rd: %s, rs1: %s, imm: %s' % (address, inst, rd, rs1, imm))
                             out_binary_string.append(
                                 Instruction(instr=inst,
                                             frmt=inst_type,
@@ -84,16 +89,17 @@ def main():
                                             imm=imm,
                                             func3=instruction['func3']))
                     elif inst_type == 'S':
+                        log('skipped S type')
                         continue
-                    elif inst_type == 'B': # Reg, Reg, Address
+                    elif inst_type == 'B':  # Reg, Reg, Address
                         rs1 = getRegBin(args[0])
                         rs2 = getRegBin(args[1])
-                        imm = formatImm(args[2], 32) # Here the value is abs Address. From ISA PC += imm. imm is distance
-                        delta = address - imm << 1 # TODO check bit 0
-                        print("delta", hex(delta))
-                        # TODO check if delta is higher then 12-bits
-                        imm = "{0:012b}".format(delta)
-                        print('Delta bin', imm)
+                        imm = formatImm(args[2])
+                        imm_delta = imm - address
+                        imm_delta_bin = int(intbv(int(imm_delta))[12:])
+                        imm = "{0:012b}".format(imm_delta_bin)
+                        log('PC: %s, inst: %s, rs1: %s, rs2: %s, imm: %s, delta: %s' % (
+                            address, inst, rs1, rs2, imm, imm_delta))
                         out_binary_string.append(
                             Instruction(instr=inst,
                                         frmt=inst_type,
@@ -102,6 +108,7 @@ def main():
                                         imm=imm,
                                         func3=instruction['func3']))
                     else:
+                        log('skipped line')
                         continue
                     address += 4
 
@@ -116,11 +123,11 @@ def calculateLabels(lines, section) -> dict:
      This assumes all instructions are real RISC-V 32-bit instructions.
      Thus, adding 4 between each instruction.
     """
-    address = date_start_address
+    address = data_start_address
     label_pattern = re.compile('[a-zA-Z0-9]+:')
     label_mapping = dict()
     if section == 'data':
-        address = date_start_address
+        address = data_start_address
     else:
         address = text_start_address
     for i in range(len(lines)):
@@ -128,10 +135,13 @@ def calculateLabels(lines, section) -> dict:
         if poten_label:
             label = poten_label.group().replace(':', '')
             # Add label with address+4 since nothing should be after the label. We hope.
-            label_mapping[label] = address + 0x04
+            if address == data_start_address or address == text_start_address:  # First line is diff
+                label_mapping[label] = address
+            else:
+                label_mapping[label] = address + 4
             # log("(%s) @ %s" % (label, hex(address)))
-        else:
-            address += 0x04  # Not a label
+        elif isInstr(lines[i]):
+            address += 4  # Not a label
     log('Located and mapped labels %s' % label_mapping)
     return label_mapping
 
@@ -174,19 +184,19 @@ def getRegBin(reg) -> str:
             return None
 
 
-def formatImm(val, bits):
+def formatImm(val):
     if val.startswith('0b'):
         val = val[2:]
         val = int(val, 2)
-        return twos_comp(val, bits)
+        return val
     elif val.startswith('0x'):
         val = val[2:]
         val = int(val, 16)
-        return twos_comp(val, bits)
+        return val
     else:
         try:
             val = int(val)
-            return twos_comp(val, bits)
+            return val
         except ValueError:
             log('Can not recognize imm value %s. Defaulting to zero' % val, prefix='ERROR')
             return 0
@@ -198,6 +208,15 @@ def isLabel(line) -> bool:
     if not l:
         return False
     return True
+
+
+def isInstr(line):
+    for word in line.split():
+        for Instruction_type, instructions in all_instructions.items():
+            for inst in instructions:
+                if word == inst['inst']:
+                    return True
+    return False
 
 
 def parseArgs():

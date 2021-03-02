@@ -1,5 +1,5 @@
 main:
-	addi a1, zero, 25
+	addi a1, zero, 0xff
 	addi t1, a1, 25
 	xor  t2, t1, a1
 	call print

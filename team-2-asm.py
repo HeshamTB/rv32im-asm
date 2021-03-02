@@ -89,15 +89,29 @@ def main():
                                             imm=imm,
                                             func3=instruction['func3']))
                     elif inst_type == 'S':
-                        log('skipped S type')
-                        continue
+                        log('%s Type args %s' % (inst_type, args))
+                        args_s = parseSTypeArgs(args[1])
+                        rs1 = getRegBin(args[0])
+                        rs2 = getRegBin(args_s[0])
+                        imm = formatImm(args_s[1])
+                        imm = int(intbv(int(imm))[12:])
+                        imm = "{0:012b}".format(imm)
+                        log('PC: %s, inst: %s, rs1: %s, rs2: %s, imm: %s' % (address, inst, rs1, rs2, imm))
+                        out_binary_string.append(Instruction(
+                            instr=inst,
+                            frmt=inst_type,
+                            imm=imm,
+                            func3=instruction['func3'],
+                            rs1=rs1,
+                            rs2=rs2
+                        ))
                     elif inst_type == 'B':  # Reg, Reg, Address
                         rs1 = getRegBin(args[0])
                         rs2 = getRegBin(args[1])
                         imm = formatImm(args[2])
                         imm_delta = imm - address
-                        imm_delta_bin = int(intbv(int(imm_delta))[12:])
-                        imm = "{0:012b}".format(imm_delta_bin)
+                        imm_delta_bin = int(intbv(int(imm_delta))[13:])
+                        imm = "{0:013b}".format(imm_delta_bin)
                         log('PC: %s, inst: %s, rs1: %s, rs2: %s, imm: %s, delta: %s' % (
                             address, inst, rs1, rs2, imm, imm_delta))
                         out_binary_string.append(
@@ -107,13 +121,41 @@ def main():
                                         rs2=rs2,
                                         imm=imm,
                                         func3=instruction['func3']))
+                    elif inst_type == 'U':  # Reg, Imm
+                        rd = getRegBin(args[0])
+                        imm = formatImm(args[1])
+                        imm = int(intbv(imm)[20:])
+                        imm = "{0:020b}".format(imm)
+                        log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
+                        out_binary_string.append(Instruction(
+                            instr=inst,
+                            rd=rd,
+                            imm=imm
+                        ))
+                    elif inst_type == 'J':
+                        #  This assumes a reg is provided (jal ra, label_add)
+                        rd = getRegBin(args[0])
+                        imm = formatImm(args[1])
+                        imm = int(intbv(imm)[21:])
+                        imm = "{0:021b}".format(imm)
+                        log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
+                        out_binary_string.append(Instruction(
+                            instr=inst,
+                            rd=rd,
+                            imm=imm
+                        ))
                     else:
                         log('skipped line')
                         continue
                     address += 4
 
-    for entry in out_binary_string:
-        print(entry.to_binary())
+    if verbose:
+        for entry in out_binary_string:
+            print(entry.to_binary())
+    if out_file_name.endswith('.txt'):
+        writeOutText(out_file_name, out_binary_string)
+    elif out_file_name.endswith('.bin'):
+        writeOutBinary(out_file_name, out_binary_string)
 
 
 def calculateLabels(lines, section) -> dict:
@@ -160,7 +202,7 @@ def listInstrArgs(line) -> list:
     return args
 
 
-def replaceLabels(labels_locations, lines) -> list:
+def replaceLabels(labels_locations : dict, lines : list) -> list:
     for i in range(len(lines)):
         args = listInstrArgs(lines[i])
         for arg in args:
@@ -184,7 +226,7 @@ def getRegBin(reg) -> str:
             return None
 
 
-def formatImm(val):
+def formatImm(val: str) -> int:
     if val.startswith('0b'):
         val = val[2:]
         val = int(val, 2)
@@ -210,7 +252,7 @@ def isLabel(line) -> bool:
     return True
 
 
-def isInstr(line):
+def isInstr(line: str) -> bool:
     for word in line.split():
         for Instruction_type, instructions in all_instructions.items():
             for inst in instructions:
@@ -219,7 +261,46 @@ def isInstr(line):
     return False
 
 
-def parseArgs():
+def parseSTypeArgs(args: str) -> list:
+    """
+    Parse args of the style -100(sp) for example
+    :return: A list of args in order of rs2, imm
+    """
+    args_out = list()
+    general_pattern = re.compile("(-*[0-9]*\(\w\w\))")  # General pattern
+    match1 = general_pattern.match(args)
+    if match1:
+        end = match1.end()
+        reg_name = match1.group()[end - 3:end - 1]
+        args_out.append(reg_name)
+        imm = match1.group().replace('(' + reg_name + ')', '')
+        if imm == '':
+            # No Imm supplied
+            imm = 0
+        args_out.append(imm)
+        log('Parsed S type with rs2: %s, imm: %s' % (reg_name, imm))
+    else:
+        warn('Could not parse or match S type inst.')
+    return args_out
+
+
+def writeOutText(file_name: str, insts: list[Instruction]):
+    # TODO make a check if file already exists and ask to overwrite. Now overwrites
+    with open(file_name, 'w') as file:
+        for inst in insts:
+            file.write(inst.to_binary() + '\n')
+    log('Done writing to %s' % file_name)
+
+
+def writeOutBinary(file_name: str, insts: list[Instruction]):
+    with open(file_name, 'wb') as file:
+        for inst in insts:
+            val = int(inst.to_binary(), 2)
+            file.write(val.to_bytes(4, 'little'))
+    log('Done writing to %s' % file_name)
+
+
+def parseArgs() -> dict:
     out_file_parser = argparse.ArgumentParser(add_help=False)
     out_file_parser.add_argument('-o', '--output', type=str, help='Output_file', metavar='Output_file', required=True)
     verbose_parser = argparse.ArgumentParser(add_help=False)
@@ -250,7 +331,7 @@ def validArgs(args):
     return None
 
 
-def stripEscapeChars(lines) -> list:
+def stripEscapeChars(lines: list) -> list:
     cleared_lines = list()
     for line in lines:
         line_mod = line.strip('\n')
@@ -259,9 +340,13 @@ def stripEscapeChars(lines) -> list:
     return cleared_lines
 
 
-def log(msg, prefix='INFO'):
+def log(msg, prefix: str = 'INFO'):
     if verbose or prefix == 'ERROR':
         print("[%s] %s" % (prefix, msg))
+
+
+def warn(msg):
+    log(msg, prefix="WARNNING")
 
 
 if __name__ == '__main__':

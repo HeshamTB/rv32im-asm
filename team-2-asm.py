@@ -121,7 +121,7 @@ def main():
                                         rs2=rs2,
                                         imm=imm,
                                         func3=instruction['func3']))
-                    elif inst_type == 'U':  #  Reg, Imm
+                    elif inst_type == 'U':  # Reg, Imm
                         rd = getRegBin(args[0])
                         imm = formatImm(args[1])
                         imm = int(intbv(imm)[20:])
@@ -202,7 +202,7 @@ def listInstrArgs(line) -> list:
     return args
 
 
-def replaceLabels(labels_locations, lines) -> list:
+def replaceLabels(labels_locations : dict, lines : list) -> list:
     for i in range(len(lines)):
         args = listInstrArgs(lines[i])
         for arg in args:
@@ -226,7 +226,7 @@ def getRegBin(reg) -> str:
             return None
 
 
-def formatImm(val):
+def formatImm(val: str) -> int:
     if val.startswith('0b'):
         val = val[2:]
         val = int(val, 2)
@@ -252,7 +252,7 @@ def isLabel(line) -> bool:
     return True
 
 
-def isInstr(line):
+def isInstr(line: str) -> bool:
     for word in line.split():
         for Instruction_type, instructions in all_instructions.items():
             for inst in instructions:
@@ -261,7 +261,7 @@ def isInstr(line):
     return False
 
 
-def parseSTypeArgs(args) -> list:
+def parseSTypeArgs(args: str) -> list:
     """
     Parse args of the style -100(sp) for example
     :return: A list of args in order of rs2, imm
@@ -284,14 +284,15 @@ def parseSTypeArgs(args) -> list:
     return args_out
 
 
-def writeOutText(file_name : str, insts : list[Instruction]):
+def writeOutText(file_name: str, insts: list[Instruction]):
     # TODO make a check if file already exists and ask to overwrite. Now overwrites
     with open(file_name, 'w') as file:
         for inst in insts:
-            file.write(inst.to_binary()+'\n')
+            file.write(inst.to_binary() + '\n')
+    log('Done writing to %s' % file_name)
 
 
-def writeOutBinary(file_name : str, insts: list[Instruction]):
+def writeOutBinary(file_name: str, insts: list[Instruction]):
     with open(file_name, 'wb') as file:
         for inst in insts:
             val = int(inst.to_binary(), 2)
@@ -299,7 +300,7 @@ def writeOutBinary(file_name : str, insts: list[Instruction]):
     log('Done writing to %s' % file_name)
 
 
-def parseArgs():
+def parseArgs() -> dict:
     out_file_parser = argparse.ArgumentParser(add_help=False)
     out_file_parser.add_argument('-o', '--output', type=str, help='Output_file', metavar='Output_file', required=True)
     verbose_parser = argparse.ArgumentParser(add_help=False)
@@ -330,7 +331,7 @@ def validArgs(args):
     return None
 
 
-def stripEscapeChars(lines) -> list:
+def stripEscapeChars(lines: list) -> list:
     cleared_lines = list()
     for line in lines:
         line_mod = line.strip('\n')
@@ -339,7 +340,7 @@ def stripEscapeChars(lines) -> list:
     return cleared_lines
 
 
-def log(msg, prefix='INFO'):
+def log(msg, prefix: str = 'INFO'):
     if verbose or prefix == 'ERROR':
         print("[%s] %s" % (prefix, msg))
 

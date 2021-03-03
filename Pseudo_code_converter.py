@@ -32,7 +32,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
    # what is done: added all the basic instructions (but the ones woth two lines)
    # waht is still to be done gola 1 and 5
 
-   if ( (type(Pseudo_code)) == str and (type(input1))==int and (type(input2)==int) and (type(input3)==int)): #all the inputs are going to be strings i could check by converting str to int
+   if ( (type(Pseudo_code)) == str and (type(input1))== str and (type(input2)== str) and (type(input3)== str)): #all the inputs are going to be strings i could check by converting str to int
 
       #check if the Pcode is registered
       for i in range(len(Pseudo_inserction_array)):
@@ -86,7 +86,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          else:
             print('none valid entrey of offset. offset size must be 32 bits')
 
-
+      # here we have the L family lb, lh, lw, ld byte half word, word and d word
       if Pseudo_code == 'la':  # this is the la instruction load adress
 
          symbol = str(input1)

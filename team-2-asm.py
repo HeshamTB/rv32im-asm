@@ -331,11 +331,14 @@ def validArgs(args):
     return None
 
 
-def stripEscapeChars(lines: list) -> list:
+def stripEscapeChars(lines) -> list:
     cleared_lines = list()
     for line in lines:
-        line_mod = line.strip('\n')
-        line_mod = line_mod.strip('\t')
+        line_mod = line.replace('\t', ' ')
+        line_mod = line_mod.strip('\n')
+        line_mod = line_mod.strip()
+        if len(line_mod) <1:
+            continue
         cleared_lines.append(line_mod)
     return cleared_lines
 

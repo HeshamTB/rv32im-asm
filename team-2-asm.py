@@ -158,35 +158,71 @@ def main():
         writeOutBinary(out_file_name, out_binary_string)
 
 
-def calculateLabels(lines, section) -> dict:
+def calculateLabels(lines) -> dict:
     """
      Calculate address for each label in lines
      :returns dict with 'label:' : address
      This assumes all instructions are real RISC-V 32-bit instructions.
      Thus, adding 4 between each instruction.
     """
-    address = data_start_address
+    address = 0
+    section = 'text'  # default section
     label_pattern = re.compile('[a-zA-Z0-9]+:')
-    label_mapping = dict()
-    if section == 'data':
-        address = data_start_address
-    else:
-        address = text_start_address
-    for i in range(len(lines)):
-        poten_label = label_pattern.match(lines[i])
-        if poten_label:
-            label = poten_label.group().replace(':', '')
-            # Add label with address+4 since nothing should be after the label. We hope.
-            if address == data_start_address or address == text_start_address:  # First line is diff
-                label_mapping[label] = address
-            else:
-                label_mapping[label] = address + 4
-            # log("(%s) @ %s" % (label, hex(address)))
-        elif isInstr(lines[i]):
-            address += 4  # Not a label
-    log('Located and mapped labels %s' % label_mapping)
-    return label_mapping
+    directive_pattern = re.compile('.+[a-zA-Z]')  # make this ignore what comes after the first space
 
+    label_mapping = dict()
+    for i in range(len(lines)):
+        # if lines[i].startswith('.'):
+        if lines[i] == '.data':
+            address = data_start_address
+            section = 'data'
+
+        elif lines[i] == '.text':
+            address = text_start_address
+            section = 'text'
+
+        if section == 'text':
+            poten_label = label_pattern.match(lines[i])
+            if poten_label:
+                label = poten_label.group().replace(':', '')
+                # Add label with address+4 since nothing should be after the label. We hope.
+                if address == text_start_address:  # or address == 0:  # First line is diff
+                    label_mapping[label] = address
+                else:
+                    label_mapping[label] = address + 4
+                # log("(%s) @ %s" % (label, hex(address)))
+            elif isInstr(lines[i]):
+                address += 4  # Not a label
+
+
+        # the rules for data segment:
+        #   1- format is [label: .data_type data]
+        #   2- if data consist of numbers, is should be seperated by commas
+        #   3- in case of commas, there must be a space after it
+        #   4- if data consist of string, it must be contained in " "
+        #   5- all of the above must be in one line
+
+        # Next step: dictionary for data types and increment address based on that, and write output.
+
+        elif section == 'data':
+            poten_label = label_pattern.match(lines[i])
+            if (poten_label):
+                data_label = poten_label.group().replace(':', '').strip()
+                mod_line = lines[i].replace(data_label + ':', '').strip()
+                poten_dir = directive_pattern.match(mod_line)
+                if not poten_dir:
+                    print("Error")
+                    exit(0)
+                # the split in next line will get rid of whatever after the first word
+                data_type = poten_dir.group().split(' ', 1)[0]
+                mod_line = mod_line.replace(data_type, '').strip()
+                print(data_label)
+                print(data_type)
+                print(mod_line)
+                # print(poten_label.group())
+
+    # log('Located and mapped labels %s' % label_mapping)
+    return label_mapping
 
 def listInstrArgs(line) -> list:
     """

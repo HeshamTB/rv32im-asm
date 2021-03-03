@@ -32,8 +32,8 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
    # what is done: added all the basic instructions (but the ones woth two lines)
    # waht is still to be done gola 1 and 5
 
-   if ( (type(Pseudo_code)) == str and (type(input1))== str and (type(input2)== str) and (type(input3)== str)): #all the inputs are going to be strings i could check by converting str to int
-
+   #if ( (type(Pseudo_code)) == str and (type(input1))== str and (type(input2)== str) and (type(input3)== str)): #all the inputs are going to be strings i could check by converting str to int
+   if 1:
       #check if the Pcode is registered
       for i in range(len(Pseudo_inserction_array)):
          if Pseudo_inserction_array[i] is Pseudo_code:
@@ -345,14 +345,3 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
       output = "False entry"
       print(output)
       return("FALSE ENTRY")
-
-
-number=12345678901234567890123456789012
-number_to_string= str(12345678901234567890123456789012)
-
-print(Pseudo_Converter('j',0,0,0))
-
-
-n=121212
-t= type(n)
-print(t)

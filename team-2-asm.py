@@ -186,8 +186,10 @@ def calculateLabels(lines, section) -> dict:
             # Add label with address+4 since nothing should be after the label. We hope.
             if address == data_start_address or address == text_start_address:  # First line is diff
                 label_mapping[label] = address
+                log("mapped %s to %s" %(label, address))
             else:
-                label_mapping[label] = address + 4
+                label_mapping[label] = address
+                log("mapped %s to %s" % (label, address))
             # log("(%s) @ %s" % (label, hex(address)))
         elif isInstr(lines[i]):
             address += 4  # Not a label

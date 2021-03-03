@@ -77,8 +77,8 @@ def main():
                             rd = getRegBin(args[0])
                             rs1 = getRegBin(args[1])
                             imm = formatImm(args[2])
-                            imm = intbv(imm, max=4095)[12:]
-                            imm_delta_bin = int(intbv(int(imm), max=4095)[12:])  # TODO improper sign ext. (00011111)
+                            imm = intbv(imm)[12:]
+                            imm_delta_bin = int(intbv(int(imm))[12:])
                             imm = "{0:012b}".format(imm_delta_bin)
                             log('PC: %s, inst: %s, rd: %s, rs1: %s, imm: %s' % (address, inst, rd, rs1, imm))
                             out_binary_string.append(
@@ -124,6 +124,7 @@ def main():
                     elif inst_type == 'U':  # Reg, Imm
                         rd = getRegBin(args[0])
                         imm = formatImm(args[1])
+                        imm = imm - address
                         imm = int(intbv(imm)[20:])
                         imm = "{0:020b}".format(imm)
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
@@ -136,6 +137,7 @@ def main():
                         #  This assumes a reg is provided (jal ra, label_add)
                         rd = getRegBin(args[0])
                         imm = formatImm(args[1])
+                        imm = imm - address
                         imm = int(intbv(imm)[21:])
                         imm = "{0:021b}".format(imm)
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))

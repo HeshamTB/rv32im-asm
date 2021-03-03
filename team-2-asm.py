@@ -3,6 +3,7 @@
 import argparse, re
 from Instructions import Instruction, all_instructions
 from myhdl import intbv
+import myhdl
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
@@ -237,10 +238,44 @@ def calculateLabels(lines) -> dict:
                 print(mod_line)
                 label_mapping[data_label] = address
                 address = new_address
-                # data_to_bin(mod_line, data_type)
+                data_to_bin(mod_line, data_type)
                 # write the output:
     log('Located and mapped labels %s' % label_mapping)
     return label_mapping
+
+
+# NOTE: this method currently prints the output, Working on it to write to output file.
+def data_to_bin(line, data_type):
+    # if the data is ascii
+    if data_type == '.ascii':
+        list_of_bytes = []  # A list to store a word (4 bytes)
+        text = bytearray()  # A list to store bytes and split them into words
+
+        # loop over each char in the line, convert each 4 letters into bytes and store them in list_of_bytes
+        # then clear list_of_bytes and start again
+        for i in range(len(line)):
+            text += bytes(line[i], encoding='ascii')
+            if len(text) % 4 == 0 or i == len(line) - 1:
+                list_of_bytes += text.splitlines()
+                text = bytearray()
+
+        # loop over each byte and print it in a binary 32-bit format for each line.
+        for byte in list_of_bytes:
+            print("{0:032b}".format(int.from_bytes(byte,byteorder='little')))
+    # if the data is a space
+    elif data_type == '.space':
+        space_amount = int(line)*8
+        for i in range(space_amount):
+            x = int(myhdl.bin('00000000'),2)  # an empty byte
+            output = x.to_bytes(4, 'little')
+            print(output)
+    # if the data is number or numbers
+    else:
+        for num in line:
+            x = int(num)
+            output = x.to_bytes(data_types[data_type]//8, 'little')
+            print(output)
+
 
 def listInstrArgs(line) -> list:
     """

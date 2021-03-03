@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import argparse, re
 from Instructions import Instruction, all_instructions
@@ -74,9 +74,14 @@ def main():
                             log('%s @ %s' % (inst, address))
                             out_binary_string.append(Instruction(instr=inst, frmt=inst_type))
                         else:
+                            args_s = parseSTypeArgs(args[1])
                             rd = getRegBin(args[0])
-                            rs1 = getRegBin(args[1])
-                            imm = formatImm(args[2])
+                            if len(args_s) == 0: # addi t1, 5
+                                rs1 = getRegBin(args[1])
+                                imm = formatImm(args[2])
+                            else: # lw t1, -8(a0)
+                                rs1 = getRegBin(args_s[0])
+                                imm = formatImm(args_s[1])
                             imm = intbv(imm)[12:]
                             imm_delta_bin = int(intbv(int(imm))[12:])
                             imm = "{0:012b}".format(imm_delta_bin)
@@ -219,7 +224,7 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
 def getRegBin(reg) -> str:
     if reg.startswith('x'):
         reg = reg.replace('x', '')
-        return regs_bin[regs[reg]]
+        return regs_bin[regs[int(reg)]]
     else:
         if regs_bin[reg]:
             return regs_bin[reg]
@@ -288,10 +293,13 @@ def parseSTypeArgs(args: str) -> list:
 
 def writeOutText(file_name: str, insts: list[Instruction]):
     # TODO make a check if file already exists and ask to overwrite. Now overwrites
-    with open(file_name, 'w') as file:
-        for inst in insts:
-            file.write(inst.to_binary() + '\n')
-    log('Done writing to %s' % file_name)
+    try:
+        with open(file_name, 'w') as file:
+            for inst in insts:
+                file.write(inst.to_binary() + '\n')
+        log('Done writing to %s' % file_name)
+    except OSError as ex:
+        log('Could not write assembled program. IO Error %s' % ex, 'ERROR')
 
 
 def writeOutBinary(file_name: str, insts: list[Instruction]):
@@ -338,6 +346,7 @@ def stripEscapeChars(lines: list) -> list:
     for line in lines:
         line_mod = line.strip('\n')
         line_mod = line_mod.strip('\t')
+        line_mod = line_mod.replace('\t', ' ')
         cleared_lines.append(line_mod)
     return cleared_lines
 

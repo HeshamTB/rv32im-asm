@@ -3,6 +3,7 @@ main:
 	sb t1, -100(t2)
 	addi t1, a1, 25
 	xor  t2, t1, a1
+	lw	t2, 0(t0)
 	lui t1, 500
 	jal ra, print
 print:

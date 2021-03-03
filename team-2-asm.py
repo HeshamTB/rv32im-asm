@@ -37,7 +37,7 @@ def main():
         in_lines = in_file.readlines()
 
     in_lines = stripEscapeChars(in_lines)
-    labels = calculateLabels(in_lines, 'text')
+    labels = calculateLabels(in_lines)
     log(labels)
     in_lines = replaceLabels(labels, in_lines)
     print(in_lines)
@@ -160,6 +160,9 @@ def main():
         writeOutBinary(out_file_name, out_binary_string)
 
 
+data_types = {'.byte': 8, '.half': 16, '.word': 32, '.dword': 64, '.space': '', '.ascii': 8}
+binary_data = list()
+
 def calculateLabels(lines) -> dict:
     """
      Calculate address for each label in lines
@@ -196,15 +199,12 @@ def calculateLabels(lines) -> dict:
             elif isInstr(lines[i]):
                 address += 4  # Not a label
 
-
         # the rules for data segment:
         #   1- format is [label: .data_type data]
         #   2- if data consist of numbers, is should be seperated by commas
         #   3- in case of commas, there must be a space after it
         #   4- if data consist of string, it must be contained in " "
         #   5- all of the above must be in one line
-
-        # Next step: dictionary for data types and increment address based on that, and write output.
 
         elif section == 'data':
             poten_label = label_pattern.match(lines[i])
@@ -218,12 +218,28 @@ def calculateLabels(lines) -> dict:
                 # the split in next line will get rid of whatever after the first word
                 data_type = poten_dir.group().split(' ', 1)[0]
                 mod_line = mod_line.replace(data_type, '').strip()
+                new_address = address
+                if data_type == '.ascii':
+                    mod_line = mod_line.strip("'").strip('"')
+                    new_address = address + data_types['.ascii'] * len(mod_line)
+                elif data_type == '.space':
+                    new_address = address + int(mod_line) * 8
+                elif data_type in data_types:
+                    mod_line = mod_line.split(',')
+                    new_address = address + data_types[data_type] * len(mod_line)
+                else:
+                    print("the data type: '" + data_type + "' is not recognized, please make sure it follows the rules"
+                                                           "and try again.")
+                    exit(0)
+
                 print(data_label)
                 print(data_type)
                 print(mod_line)
-                # print(poten_label.group())
-
-    # log('Located and mapped labels %s' % label_mapping)
+                label_mapping[data_label] = address
+                address = new_address
+                # data_to_bin(mod_line, data_type)
+                # write the output:
+    log('Located and mapped labels %s' % label_mapping)
     return label_mapping
 
 def listInstrArgs(line) -> list:

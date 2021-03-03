@@ -3,6 +3,7 @@
 import argparse, re
 from Instructions import Instruction, all_instructions
 from myhdl import intbv
+import myhdl
 
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
@@ -37,7 +38,7 @@ def main():
         in_lines = in_file.readlines()
 
     in_lines = stripEscapeChars(in_lines)
-    labels = calculateLabels(in_lines, 'text')
+    labels = calculateLabels(in_lines)
     log(labels)
     in_lines = replaceLabels(labels, in_lines)
     print(in_lines)
@@ -165,36 +166,120 @@ def main():
         writeOutBinary(out_file_name, out_binary_string)
 
 
-def calculateLabels(lines, section) -> dict:
+data_types = {'.byte': 8, '.half': 16, '.word': 32, '.dword': 64, '.space': '', '.ascii': 8}
+binary_data = list()
+
+def calculateLabels(lines) -> dict:
     """
      Calculate address for each label in lines
      :returns dict with 'label:' : address
      This assumes all instructions are real RISC-V 32-bit instructions.
      Thus, adding 4 between each instruction.
     """
-    address = data_start_address
+    address = 0
+    section = 'text'  # default section
     label_pattern = re.compile('[a-zA-Z0-9]+:')
+    directive_pattern = re.compile('.+[a-zA-Z]')  # make this ignore what comes after the first space
+
     label_mapping = dict()
-    if section == 'data':
-        address = data_start_address
-    else:
-        address = text_start_address
     for i in range(len(lines)):
-        poten_label = label_pattern.match(lines[i])
-        if poten_label:
-            label = poten_label.group().replace(':', '')
-            # Add label with address+4 since nothing should be after the label. We hope.
-            if address == data_start_address or address == text_start_address:  # First line is diff
-                label_mapping[label] = address
-                log("mapped %s to %s" %(label, address))
-            else:
-                label_mapping[label] = address
-                log("mapped %s to %s" % (label, address))
-            # log("(%s) @ %s" % (label, hex(address)))
-        elif isInstr(lines[i]):
-            address += 4  # Not a label
+        # if lines[i].startswith('.'):
+        if lines[i] == '.data':
+            address = data_start_address
+            section = 'data'
+
+        elif lines[i] == '.text':
+            address = text_start_address
+            section = 'text'
+
+        if section == 'text':
+            poten_label = label_pattern.match(lines[i])
+            if poten_label:
+                label = poten_label.group().replace(':', '')
+                # Add label with address+4 since nothing should be after the label. We hope.
+                if address == text_start_address:  # or address == 0:  # First line is diff
+                    label_mapping[label] = address
+                else:
+                    label_mapping[label] = address + 4
+                # log("(%s) @ %s" % (label, hex(address)))
+            elif isInstr(lines[i]):
+                address += 4  # Not a label
+
+        # the rules for data segment:
+        #   1- format is [label: .data_type data]
+        #   2- if data consist of numbers, is should be seperated by commas
+        #   3- in case of commas, there must be a space after it
+        #   4- if data consist of string, it must be contained in " "
+        #   5- all of the above must be in one line
+
+        elif section == 'data':
+            poten_label = label_pattern.match(lines[i])
+            if (poten_label):
+                data_label = poten_label.group().replace(':', '').strip()
+                mod_line = lines[i].replace(data_label + ':', '').strip()
+                poten_dir = directive_pattern.match(mod_line)
+                if not poten_dir:
+                    print("Error")
+                    exit(0)
+                # the split in next line will get rid of whatever after the first word
+                data_type = poten_dir.group().split(' ', 1)[0]
+                mod_line = mod_line.replace(data_type, '').strip()
+                new_address = address
+                if data_type == '.ascii':
+                    mod_line = mod_line.strip("'").strip('"')
+                    new_address = address + data_types['.ascii'] * len(mod_line)
+                elif data_type == '.space':
+                    new_address = address + int(mod_line) * 8
+                elif data_type in data_types:
+                    mod_line = mod_line.split(',')
+                    new_address = address + data_types[data_type] * len(mod_line)
+                else:
+                    print("the data type: '" + data_type + "' is not recognized, please make sure it follows the rules"
+                                                           "and try again.")
+                    exit(0)
+
+                print(data_label)
+                print(data_type)
+                print(mod_line)
+                label_mapping[data_label] = address
+                address = new_address
+                data_to_bin(mod_line, data_type)
+                # write the output:
     log('Located and mapped labels %s' % label_mapping)
     return label_mapping
+
+
+# NOTE: this method currently prints the output, Working on it to write to output file.
+def data_to_bin(line, data_type):
+    # if the data is ascii
+    if data_type == '.ascii':
+        list_of_bytes = []  # A list to store a word (4 bytes)
+        text = bytearray()  # A list to store bytes and split them into words
+
+        # loop over each char in the line, convert each 4 letters into bytes and store them in list_of_bytes
+        # then clear list_of_bytes and start again
+        for i in range(len(line)):
+            text += bytes(line[i], encoding='ascii')
+            if len(text) % 4 == 0 or i == len(line) - 1:
+                list_of_bytes += text.splitlines()
+                text = bytearray()
+
+        # loop over each byte and print it in a binary 32-bit format for each line.
+        for byte in list_of_bytes:
+            print("{0:032b}".format(int.from_bytes(byte,byteorder='little')))
+    # if the data is a space
+    elif data_type == '.space':
+        space_amount = int(line)*8
+        for i in range(space_amount):
+            x = int(myhdl.bin('00000000'),2)  # an empty byte
+            output = x.to_bytes(4, 'little')
+            print(output)
+    # if the data is number or numbers
+    else:
+        for num in line:
+            x = int(num)
+            output = x.to_bytes(data_types[data_type]//8, 'little')
+            print(output)
 
 
 def listInstrArgs(line) -> list:
@@ -226,7 +311,7 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
 def getRegBin(reg) -> str:
     if reg.startswith('x'):
         reg = reg.replace('x', '')
-        return regs_bin[regs[int(reg)]]
+        return regs_bin[regs[reg]]
     else:
         if regs_bin[reg]:
             return regs_bin[reg]
@@ -346,9 +431,12 @@ def validArgs(args):
 def stripEscapeChars(lines: list) -> list:
     cleared_lines = list()
     for line in lines:
-        line_mod = line.strip('\n')
+        line_mod = line.replace('\t', ' ')
+        line_mod = line_mod.strip('\n')
         line_mod = line_mod.strip('\t')
-        line_mod = line_mod.replace('\t', ' ')
+        line_mod = line_mod.strip()
+        if len(line_mod) <1:
+            continue
         cleared_lines.append(line_mod)
     return cleared_lines
 

@@ -42,7 +42,7 @@ Loop:
 copy:	
 	mv	t0, a0
 	mv	t1, a1
-	CPLoop:
+CPLoop:
 	lw	t2, 0(t0)
 	sw	t2, 0(t1)
 	addi t0, t0, 4

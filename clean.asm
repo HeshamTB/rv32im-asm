@@ -3,6 +3,7 @@ main:
 	sb t1, -100(t2)
 	addi t1, a1, 25
 	xor  t2, t1, a1
+	lw	t2, 0(t0)
 	lui t1, 500
 	jal ra, print
 print:
@@ -14,3 +15,6 @@ print:
 	beq a7, zero, print
 	ecall
 	
+L3:
+	add t1, a0, a1
+	bne t1, a0, L3

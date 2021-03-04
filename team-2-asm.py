@@ -166,7 +166,10 @@ def main():
         writeOutBinary(out_file_name, out_binary_string)
 
 
+# a dictionary for data types:
 data_types = {'.byte': 8, '.half': 16, '.word': 32, '.dword': 64, '.space': '', '.ascii': 8}
+f_bin = open('Binary_data.bin', 'wb')  # edit
+f_text = open('Binary_data.txt', 'w')  # edit
 binary_data = list()
 
 def calculateLabels(lines) -> dict:
@@ -182,6 +185,7 @@ def calculateLabels(lines) -> dict:
     directive_pattern = re.compile('.+[a-zA-Z]')  # make this ignore what comes after the first space
 
     label_mapping = dict()
+
     for i in range(len(lines)):
         # if lines[i].startswith('.'):
         if lines[i] == '.data':
@@ -196,14 +200,14 @@ def calculateLabels(lines) -> dict:
             poten_label = label_pattern.match(lines[i])
             if poten_label:
                 label = poten_label.group().replace(':', '')
-                # Add label with address+4 since nothing should be after the label. We hope.
-                if address == text_start_address:  # or address == 0:  # First line is diff
+                # Add label with address+4 since nothing should be after the label, We hope.
+                if address == text_start_address:  # or address == 0:  # First line is different
                     label_mapping[label] = address
                 else:
                     label_mapping[label] = address + 4
-                # log("(%s) @ %s" % (label, hex(address)))
             elif isInstr(lines[i]):
                 address += 4  # Not a label
+
 
         # the rules for data segment:
         #   1- format is [label: .data_type data]
@@ -212,6 +216,9 @@ def calculateLabels(lines) -> dict:
         #   4- if data consist of string, it must be contained in " "
         #   5- all of the above must be in one line
 
+        # Note: Currently dosn't output .txt file
+
+        # Data Section:
         elif section == 'data':
             poten_label = label_pattern.match(lines[i])
             if (poten_label):
@@ -238,48 +245,54 @@ def calculateLabels(lines) -> dict:
                                                            "and try again.")
                     exit(0)
 
-                print(data_label)
-                print(data_type)
-                print(mod_line)
                 label_mapping[data_label] = address
                 address = new_address
-                data_to_bin(mod_line, data_type)
+
                 # write the output:
+                data_to_bin(mod_line, data_type)
+
+
     log('Located and mapped labels %s' % label_mapping)
+
+    # close files
+    f_bin.close()
+    f_text.close()
     return label_mapping
 
 
-# NOTE: this method currently prints the output, Working on it to write to output file.
 def data_to_bin(line, data_type):
-    # if the data is ascii
     if data_type == '.ascii':
-        list_of_bytes = []  # A list to store a word (4 bytes)
-        text = bytearray()  # A list to store bytes and split them into words
+        list_of_words = []  # A list to store a word (4 bytes)
+        text = bytes()  # A list to store bytes and split them into words
 
-        # loop over each char in the line, convert each 4 letters into bytes and store them in list_of_bytes
+        # loop over each char in the line, convert each 4 letters into bytes (1 word) and store them in list_of_bytes
         # then clear list_of_bytes and start again
         for i in range(len(line)):
             text += bytes(line[i], encoding='ascii')
+            print(text)
             if len(text) % 4 == 0 or i == len(line) - 1:
-                list_of_bytes += text.splitlines()
-                text = bytearray()
+                list_of_words += text.splitlines()
+                text = bytes()
 
-        # loop over each byte and print it in a binary 32-bit format for each line.
-        for byte in list_of_bytes:
-            print("{0:032b}".format(int.from_bytes(byte,byteorder='little')))
-    # if the data is a space
-    elif data_type == '.space':
-        space_amount = int(line)*8
-        for i in range(space_amount):
-            x = int(myhdl.bin('00000000'),2)  # an empty byte
-            output = x.to_bytes(4, 'little')
-            print(output)
-    # if the data is number or numbers
+        writeOutDataBinary(list_of_words)
+
     else:
-        for num in line:
-            x = int(num)
-            output = x.to_bytes(data_types[data_type]//8, 'little')
-            print(output)
+        list_of_words = list()
+        for i in range(len(line)):
+            list_of_words.append(int(line[i]).to_bytes(data_types[data_type]//4, byteorder='little'))
+
+        writeOutDataBinary(list_of_words)
+
+
+def writeOutDataText(list_of_words):
+    for word in list_of_words:
+        word = str(word)
+        f_text.write(word + '\n')
+
+
+def writeOutDataBinary(list_of_words):
+    for word in list_of_words:
+        f_bin.write(word)
 
 
 def listInstrArgs(line) -> list:

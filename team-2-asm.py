@@ -390,8 +390,8 @@ def parseSTypeArgs(args: str) -> list:
         warn('Could not parse or match S type inst.')
     return args_out
 
-
-def writeOutText(file_name: str, insts: list[Instruction]):
+# intst is a list of instructions in binary
+def writeOutText(file_name: str, insts):
     # TODO make a check if file already exists and ask to overwrite. Now overwrites
     try:
         with open(file_name, 'w') as file:
@@ -401,8 +401,8 @@ def writeOutText(file_name: str, insts: list[Instruction]):
     except OSError as ex:
         log('Could not write assembled program. IO Error %s' % ex, 'ERROR')
 
-
-def writeOutBinary(file_name: str, insts: list[Instruction]):
+# intst is a list of instructions in binary
+def writeOutBinary(file_name: str, insts):
     with open(file_name, 'wb') as file:
         for inst in insts:
             val = int(inst.to_binary(), 2)

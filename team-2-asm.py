@@ -200,7 +200,7 @@ def calculateLabels(lines) -> dict:
                 if address == text_start_address:  # or address == 0:  # First line is diff
                     label_mapping[label] = address
                 else:
-                    label_mapping[label] = address + 4
+                    label_mapping[label] = address
                 # log("(%s) @ %s" % (label, hex(address)))
             elif isInstr(lines[i]):
                 address += 4  # Not a label
@@ -219,7 +219,7 @@ def calculateLabels(lines) -> dict:
                 mod_line = lines[i].replace(data_label + ':', '').strip()
                 poten_dir = directive_pattern.match(mod_line)
                 if not poten_dir:
-                    print("Error")
+                    log('Invalid directive %s' % mod_line, prefix='ERROR')
                     exit(0)
                 # the split in next line will get rid of whatever after the first word
                 data_type = poten_dir.group().split(' ', 1)[0]
@@ -234,8 +234,8 @@ def calculateLabels(lines) -> dict:
                     mod_line = mod_line.split(',')
                     new_address = address + data_types[data_type] * len(mod_line)
                 else:
-                    print("the data type: '" + data_type + "' is not recognized, please make sure it follows the rules"
-                                                           "and try again.")
+                    log("the data type: '" + data_type + "' is not recognized, please make sure it follows the rules"
+                                                           "and try again.", prefix="ERROR")
                     exit(0)
 
                 print(data_label)

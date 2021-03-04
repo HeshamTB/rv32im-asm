@@ -1,3 +1,4 @@
+.text
 main:
 	addi a1, zero, 0xff
 	sb t1, -100(t2)

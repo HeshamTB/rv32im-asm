@@ -13,16 +13,15 @@ data_start_address = 0x10010000
 regs = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1',
         'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4',
         's5', 's6', 's7', 's8', 's9', ' s10', 's11', 't3', 't4', 't5', 't6', 'pc']
-regsx = ['x0', 'x1', 'x2', 'x3', 'x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17'
-         ,'x18','x19','x20','x21','x22','x23','x24','x25','x26','x27','x28','x29','x30','x31','']
+regsx = ['x0', 'x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7', 'x8', 'x9', 'x10', 'x11', 'x12', 'x13', 'x14', 'x15', 'x16',
+         'x17'
+    , 'x18', 'x19', 'x20', 'x21', 'x22', 'x23', 'x24', 'x25', 'x26', 'x27', 'x28', 'x29', 'x30', 'x31', '']
 
 regs_bin = dict()
 regsx_bin = dict()
 for i in range(len(regs)):
     regs_bin[regs[i]] = "{0:05b}".format(i)
     regs_bin[regsx[i]] = "{0:05b}".format(i)
-
-
 
 
 def main():
@@ -84,10 +83,10 @@ def main():
                         else:
                             args_s = parseSTypeArgs(args[1])
                             rd = getRegBin(args[0])
-                            if len(args_s) == 0: # addi t1, 5
+                            if len(args_s) == 0:  # addi t1, 5
                                 rs1 = getRegBin(args[1])
                                 imm = formatImm(args[2])
-                            else: # lw t1, -8(a0)
+                            else:  # lw t1, -8(a0)
                                 rs1 = getRegBin(args_s[0])
                                 imm = formatImm(args_s[1])
                             imm = intbv(imm)[12:]
@@ -179,6 +178,7 @@ f_bin = open('Binary_data.bin', 'wb')  # edit
 f_text = open('Binary_data.txt', 'w')  # edit
 binary_data = list()
 
+
 def calculateLabels(lines) -> dict:
     """
      Calculate address for each label in lines
@@ -258,7 +258,6 @@ def calculateLabels(lines) -> dict:
                 # write the output:
                 data_to_bin(mod_line, data_type)
 
-
     log('Located and mapped labels %s' % label_mapping)
 
     # close files
@@ -286,7 +285,7 @@ def data_to_bin(line, data_type):
     else:
         list_of_words = list()
         for i in range(len(line)):
-            list_of_words.append(int(line[i]).to_bytes(data_types[data_type]//4, byteorder='little'))
+            list_of_words.append(int(line[i]).to_bytes(data_types[data_type] // 4, byteorder='little'))
 
         writeOutDataBinary(list_of_words)
 
@@ -316,7 +315,7 @@ def listInstrArgs(line) -> list:
     return args
 
 
-def replaceLabels(labels_locations : dict, lines : list) -> list:
+def replaceLabels(labels_locations: dict, lines: list) -> list:
     for i in range(len(lines)):
         args = listInstrArgs(lines[i])
         for arg in args:
@@ -397,6 +396,7 @@ def parseSTypeArgs(args: str) -> list:
         warn('Could not parse or match S type inst.')
     return args_out
 
+
 # intst is a list of instructions in binary
 def writeOutText(file_name: str, insts):
     # TODO make a check if file already exists and ask to overwrite. Now overwrites
@@ -407,6 +407,7 @@ def writeOutText(file_name: str, insts):
         log('Done writing to %s' % file_name)
     except OSError as ex:
         log('Could not write assembled program. IO Error %s' % ex, 'ERROR')
+
 
 # intst is a list of instructions in binary
 def writeOutBinary(file_name: str, insts):
@@ -455,7 +456,7 @@ def stripEscapeChars(lines: list) -> list:
         line_mod = line_mod.strip('\n')
         line_mod = line_mod.strip('\t')
         line_mod = line_mod.strip()
-        if len(line_mod) <1:
+        if len(line_mod) < 1:
             continue
         cleared_lines.append(line_mod)
     return cleared_lines

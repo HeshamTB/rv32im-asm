@@ -112,7 +112,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
          output_str = ''
-         return ('jalr x0, x1, 0')
+         return 'jalr x0, x1, 0'
 
       if Pseudo_code == 'mv': #mv copy register instruction
          string_buffer1 = str(input1)

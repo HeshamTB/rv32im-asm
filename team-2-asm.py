@@ -179,7 +179,7 @@ f_text = open('Binary_data.txt', 'w')  # edit
 binary_data = list()
 
 
-def calculateLabels(lines) -> dict:
+def calculateLabels(lines : list[str]) -> dict:
     """
      Calculate address for each label in lines
      :returns dict with 'label:' : address
@@ -190,7 +190,7 @@ def calculateLabels(lines) -> dict:
     section = 'text'  # default section
     label_pattern = re.compile('[a-zA-Z0-9]+:')
     directive_pattern = re.compile('.+[a-zA-Z]')  # make this ignore what comes after the first space
-
+    from Pseudo_code_converter import Pseudo_Converter
     label_mapping = dict()
 
     for i in range(len(lines)):
@@ -204,6 +204,10 @@ def calculateLabels(lines) -> dict:
             section = 'text'
 
         if section == 'text':
+            val = Pseudo_Converter(lines[i].split()[0].strip())
+            if val:
+                print("PS ", lines[i], val, len(val))
+            print(lines[i], lines[i].split()[0].strip(), val)
             poten_label = label_pattern.match(lines[i])
             if poten_label:
                 label = poten_label.group().replace(':', '')
@@ -275,7 +279,7 @@ def data_to_bin(line, data_type):
         # then clear list_of_bytes and start again
         for i in range(len(line)):
             text += bytes(line[i], encoding='ascii')
-            print(text)
+            #print(text)
             if len(text) % 4 == 0 or i == len(line) - 1:
                 list_of_words += text.splitlines()
                 text = bytes()

@@ -100,6 +100,6 @@ L2:
 	ret
 
 .data
-A1:	.word 8, 5, 10, 9, 2, 6, 7, 0
+A1: .word 8, 5, 10, 9, 2, 6, 7, 0
 A2: .word 0, 0, 0, 0, 0, 0, 0, 0
 exitmsg: .ascii "The program is done, exiting..."

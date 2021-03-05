@@ -19,3 +19,6 @@ print:
 L3:
 	add t1, a0, a1
 	bne t1, a0, L3
+
+.data
+msg: .ascii "Test Sent"

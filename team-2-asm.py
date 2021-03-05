@@ -104,8 +104,8 @@ def main():
                     elif inst_type == 'S':
                         log('%s Type args %s' % (inst_type, args))
                         args_s = parseSTypeArgs(args[1])
-                        rs1 = getRegBin(args[0])
-                        rs2 = getRegBin(args_s[0])
+                        rs2 = getRegBin(args[0])
+                        rs1 = getRegBin(args_s[0])
                         imm = formatImm(args_s[1])
                         imm = int(intbv(int(imm))[12:])
                         imm = "{0:012b}".format(imm)

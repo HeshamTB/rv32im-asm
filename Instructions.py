@@ -52,7 +52,7 @@ class Instruction:
             opcode = '0100011'
             temp = self.imm[::-1]
             lower_imm = temp[4::-1]
-            upper_imm = temp[11:4]  # from bit 11 to bit 5 (4 is not included)
+            upper_imm = temp[11:4:-1]  # from bit 11 to bit 5 (4 is not included)
             return upper_imm + self.rs2 + self.rs1 + self.func3 + lower_imm + opcode
 
         elif self.frmt == 'B':  # Fixed
@@ -60,7 +60,7 @@ class Instruction:
             # Note: The immediate will be 12 bit signed binary. we will sign-extend it one bit left, then choose ...
             # only bits 12:1 excluding bit 0, which is always equal to 0
             temp = self.imm[::-1]
-            temp = temp[11] + temp  # set bit 12 to be the same as bit 11 (sign extension by one bit)
+            #temp = temp[11] + temp  # set bit 12 to be the same as bit 11 (sign extension by one bit)
             imm_11 = temp[11]
             imm_4 = temp[4:0:-1]  # from bit 4 to bit 1 (0 is not included)
             imm_10 = temp[10:4:-1]  # from bit 10 to bit 5 (4 is not included)

@@ -1,7 +1,6 @@
 .text
 
 main:
-
 	la	a0, A2
 	addi	a1, x0, 8
 	call clear
@@ -10,45 +9,44 @@ main:
 	la	a0, A1
 	la	a1, A2
 	call copy
-	
+
 
 	la	a0, A2
 	addi	a1, zero, 8
 	call sort
-	
-			
+
+
 	la	a1, exitmsg
 	addi	a2, zero, 31
 	call print
 
-    addi    a0, x0, 0
-    addi    a7, x0, 93
-    ecall
+
+        addi    a0, x0, 0
+        addi    a7, x0, 93
+        ecall
 
 
 print:
         addi  a0, x0, 1
-        la    a1, exitmsg
-        addi  a2, x0, 13
         addi  a7, x0, 64
         ecall
         ret
-        
 
 
-clear:	
+
+clear:
 	mv	t0, a1
-Loop:
+	Loop:
 	sw	zero, 0(a0)
 	addi	t0, t0, -1
 	addi	a0, a0, 4
 	bne	t0, zero, Loop
 	ret
-	
-copy:	
+
+copy:
 	mv	t0, a0
 	mv	t1, a1
-CPLoop:
+	CPLoop:
 	lw	t2, 0(t0)
 	sw	t2, 0(t1)
 	addi	t0, t0, 4
@@ -63,7 +61,7 @@ swap:
      sw  t1, 0(a0)
      sw  t0, 0(a1)
      ret
-				
+
 sort:
     addi  sp, sp, -32
     sw  ra, 28(sp)
@@ -76,7 +74,7 @@ sort:
     addi  s3, a1, -1
     bgtz  s3, L1
     j L2
-L4:
+    L4:
     mv  a0, s0
     addi  s0, s0, 4
     lw  t1, 0(a0)
@@ -84,19 +82,19 @@ L4:
     ble t1, t0, L3
     mv  a1, s0
     call swap
-L3:
+    L3:
     addi  s1, s1, 1
-    blt   s1, s2, L4
-L5:
+    blt s1, s2, L4
+    L5:
     addi  s3, s3, -1
-    beqz  s3, L2 
-L1:
+    beqz  s3, L2
+    L1:
     mv  s2, s3
-    blez  s3, L5 
+    blez  s3, L5
     mv  s0, s4
     li  s1, 0
     j L4
-L2:
+    L2:
     lw  ra, 28(sp)
     lw  s0, 24(sp)
     lw  s1, 20(sp)

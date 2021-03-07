@@ -5,17 +5,28 @@ from Instructions import Instruction, all_instructions
 from myhdl import intbv
 import myhdl
 
+
+# ============================================================================================= #
+# ==================================== Initialize section ===================================== #
+# ============================================================================================= #
+
+
 print("RISC-V RV32IM assembler (Team 2)")
 verbose = False
-# Following RARS Simulator
+
+# Following RARS Simulator, initialize some addresses:
 text_start_address = 0x00400000
 data_start_address = 0x10010000
+
+# initialize registers with their different representations:
+# 1- By names:
 regs = ['zero', 'ra', 'sp', 'gp', 'tp', 't0', 't1', 't2', 's0', 's1',
         'a0', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 's2', 's3', 's4',
         's5', 's6', 's7', 's8', 's9', ' s10', 's11', 't3', 't4', 't5', 't6', 'pc']
+# 2- Starting with x:
 regsx = ['x0', 'x1', 'x2', 'x3', 'x4','x5','x6','x7','x8','x9','x10','x11','x12','x13','x14','x15','x16','x17'
          ,'x18','x19','x20','x21','x22','x23','x24','x25','x26','x27','x28','x29','x30','x31','']
-
+# 3- By their number:
 regs_bin = dict()
 regsx_bin = dict()
 for i in range(len(regs)):
@@ -23,6 +34,9 @@ for i in range(len(regs)):
     regs_bin[regsx[i]] = "{0:05b}".format(i)
 
 
+# ============================================================================================= #
+# =================================== Start of main program =================================== #
+# ============================================================================================= #
 
 
 def main():
@@ -38,18 +52,27 @@ def main():
     log("Assembly file: %s" % in_file_name)
     log("Output file: %s" % out_file_name)
 
-    # Split to into methods and modules
+    # lists to store lines and output binary string
     in_lines = list()
     out_binary_string = list()
+
+    # Start the first pass:
     with open(in_file_name, 'r') as in_file:
         in_lines = in_file.readlines()
 
+    # delete unwanted characters
     in_lines = stripEscapeChars(in_lines)
+
+    # calculate the address of each label + write the data output
     labels = calculateLabels(in_lines)
     log(labels)
+
+    # replace every label with it's address
     in_lines = replaceLabels(labels, in_lines)
     print(in_lines)
-    address = text_start_address  # Account for data sec
+
+    # start second pass:
+    address = text_start_address
     for i in range(len(in_lines)):
         in_lines[i] = in_lines[i].strip()
         if not in_lines[i].split() or isLabel(in_lines[i]):
@@ -84,10 +107,10 @@ def main():
                         else:
                             args_s = parseSTypeArgs(args[1])
                             rd = getRegBin(args[0])
-                            if len(args_s) == 0: # addi t1, 5
+                            if len(args_s) == 0:  # addi t1, 5
                                 rs1 = getRegBin(args[1])
                                 imm = formatImm(args[2])
-                            else: # lw t1, -8(a0)
+                            else:  # lw t1, -8(a0)
                                 rs1 = getRegBin(args_s[0])
                                 imm = formatImm(args_s[1])
                             imm = intbv(imm)[12:]
@@ -171,13 +194,21 @@ def main():
         writeOutText(out_file_name, out_binary_string)
     elif out_file_name.endswith('.bin'):
         writeOutBinary(out_file_name, out_binary_string)
+# end of main program
+
+# ============================================================================================= #
+# ================================= Helping Functions section ================================= #
+# ============================================================================================= #
 
 
-# a dictionary for data types:
-data_types = {'.byte': 8, '.half': 16, '.word': 32, '.dword': 64, '.space': '', '.ascii': 8}
-f_bin = open('Binary_data.bin', 'wb')  # edit
-f_text = open('Binary_data.txt', 'w')  # edit
-binary_data = list()
+# Initialize some variables needed by the next function
+#   1- a dictionary for data types:
+data_types = {'.byte': 1, '.half': 2, '.word': 4, '.dword': 8, '.space': '', '.ascii': 1}
+
+#   2- opening two files to write output:
+f_bin = open('Data-Binary.bin', 'wb')
+f_text = open('Data-Binary-text.txt', 'w')
+
 
 def calculateLabels(lines) -> dict:
     """
@@ -185,65 +216,80 @@ def calculateLabels(lines) -> dict:
      :returns dict with 'label:' : address
      This assumes all instructions are real RISC-V 32-bit instructions.
      Thus, adding 4 between each instruction.
+
+     Also, writes out (.bin) and (.txt) files representing data section.
     """
+    # address variable serves as program counter
     address = 0
     section = 'text'  # default section
+
+    # patterns to recognize a label / directive when we read one
     label_pattern = re.compile('[a-zA-Z0-9]+:')
     directive_pattern = re.compile('.+[a-zA-Z]')  # make this ignore what comes after the first space
 
+    # store labels and their addresses
     label_mapping = dict()
 
+    # Determine whether this is text or data segment
     for i in range(len(lines)):
-        # if lines[i].startswith('.'):
         if lines[i] == '.data':
             address = data_start_address
             section = 'data'
-
         elif lines[i] == '.text':
             address = text_start_address
             section = 'text'
 
+        # ---------------------------------- Text Section ---------------------------------- #
+        # Rules for text segment:
+        #   1- Labels must be alone in the line
+
         if section == 'text':
-            poten_label = label_pattern.match(lines[i])
+            poten_label = label_pattern.match(lines[i])  # a potential label
+            # if the potential label matches the pattern of labels:
             if poten_label:
                 label = poten_label.group().replace(':', '')
-                # Add label with address+4 since nothing should be after the label, We hope.
-                if address == text_start_address:  # or address == 0:  # First line is different
-                    label_mapping[label] = address
+                # Add label with address + 4 since nothing should be after the label, We hope.
+                if address == text_start_address:  # or address == 0:
+                    label_mapping[label] = address  # First line is different
                 else:
                     label_mapping[label] = address + 4
+            # Not a label:
             elif isInstr(lines[i]):
-                address += 4  # Not a label
+                address += 4
 
+        # ---------------------------------- Data Section ---------------------------------- #
 
         # the rules for data segment:
         #   1- format is [label: .data_type data]
-        #   2- if data consist of numbers, is should be seperated by commas
+        #   2- if data consist of numbers, is should be separated by commas
         #   3- in case of commas, there must be a space after it
         #   4- if data consist of string, it must be contained in " "
         #   5- all of the above must be in one line
-
-        # Note: Currently dosn't output .txt file
+        #   6- text must be declared last, after all numeric data
 
         # Data Section:
         elif section == 'data':
-            poten_label = label_pattern.match(lines[i])
+            poten_label = label_pattern.match(lines[i])  # a potential data label
+            # if the potential label matches the pattern of labels:
             if (poten_label):
                 data_label = poten_label.group().replace(':', '').strip()
-                mod_line = lines[i].replace(data_label + ':', '').strip()
-                poten_dir = directive_pattern.match(mod_line)
+                mod_line = lines[i].replace(data_label + ':', '').strip()  # modify the line, delete the label from it
+                poten_dir = directive_pattern.match(mod_line)  # a potential directive
+                # if no directive comes after the label, exit, since this is an error (no data type).
                 if not poten_dir:
                     print("Error")
                     exit(0)
-                # the split in next line will get rid of whatever after the first word
+                # the 'split' in next line will get rid of whatever after the first word
                 data_type = poten_dir.group().split(' ', 1)[0]
                 mod_line = mod_line.replace(data_type, '').strip()
+                # initially, the new address is the current address,
+                # then, it will be incremented for the data that comes after it.
                 new_address = address
                 if data_type == '.ascii':
                     mod_line = mod_line.strip("'").strip('"')
                     new_address = address + data_types['.ascii'] * len(mod_line)
                 elif data_type == '.space':
-                    new_address = address + int(mod_line) * 8
+                    new_address = address + int(mod_line)
                 elif data_type in data_types:
                     mod_line = mod_line.split(',')
                     new_address = address + data_types[data_type] * len(mod_line)
@@ -252,22 +298,33 @@ def calculateLabels(lines) -> dict:
                                                            "and try again.")
                     exit(0)
 
+                # set the current address to equal the new address, and add the label-address to the dictionary
                 label_mapping[data_label] = address
                 address = new_address
 
-                # write the output:
+                # write the output of data segment in (.bin) file:
                 data_to_bin(mod_line, data_type)
-
 
     log('Located and mapped labels %s' % label_mapping)
 
-    # close files
+    # close file (.bin)
     f_bin.close()
+    # write the binary data as text:
+    writeOutDataText()
+    # close the .txt file
     f_text.close()
+    # return the labels and their addresses
     return label_mapping
 
 
 def data_to_bin(line, data_type):
+    """
+    A function that takes a line containing data, and slice it into a list of 4 bytes (a word) then write down
+    each word into the data output .bin file
+    :param line: Line containing data that needs to be stored in memory
+    :param data_type: type of the data
+    :return: None
+    """
     if data_type == '.ascii':
         list_of_words = []  # A list to store a word (4 bytes)
         text = bytes()  # A list to store bytes and split them into words
@@ -276,28 +333,48 @@ def data_to_bin(line, data_type):
         # then clear list_of_bytes and start again
         for i in range(len(line)):
             text += bytes(line[i], encoding='ascii')
-            print(text)
             if len(text) % 4 == 0 or i == len(line) - 1:
                 list_of_words += text.splitlines()
                 text = bytes()
 
-        writeOutDataBinary(list_of_words)
+        writeOutDataBinary(list_of_words)  # Write the output into (.bin) file
 
-    else:
+    elif data_type == '.space':  # Leave some bytes empty
+        writeOutDataBinary(bytes(int(line)))  # Write the output into (.bin) file
+
+    else:  # Numeric data (either word or half or ... etc)
         list_of_words = list()
-        for i in range(len(line)):
-            list_of_words.append(int(line[i]).to_bytes(data_types[data_type]//4, byteorder='little'))
+        for n in range(len(line)):
+            list_of_words.append(int(line[n]).to_bytes(data_types[data_type]//4, byteorder='little'))
 
-        writeOutDataBinary(list_of_words)
+        writeOutDataBinary(list_of_words)  # Write the output into (.bin) file
 
 
-def writeOutDataText(list_of_words):
-    for word in list_of_words:
-        word = str(word)
-        f_text.write(word + '\n')
+def writeOutDataText():
+    """
+    A method that converts .bin file of data section into .txt file
+    :return: None
+    """
+    # open the (.bin) file again to read from it
+    f_obin = open('Binary_data.bin', 'rb')
+    reading = f_obin.read()
+    # Write the same binary data as text in the (.txt) file
+    for i in range(0, len(reading), 4):
+        f_text.write(
+            myhdl.bin(int.from_bytes(reading[i:i + 4], 'little'), 32)
+        )
+        f_text.write('\n')
+    # Close the two data files.
+    f_obin.close()
 
 
 def writeOutDataBinary(list_of_words):
+    """
+    A method that takes a list of words (4 bytes) from
+    data section and writes it into .bin file
+    :param list_of_words: a list containing 4 bytes
+    :return: None
+    """
     for word in list_of_words:
         f_bin.write(word)
 
@@ -317,6 +394,13 @@ def listInstrArgs(line) -> list:
 
 
 def replaceLabels(labels_locations : dict, lines : list) -> list:
+    """
+    A method that takes lines, and replace any label in there
+    with the appropriate address corresponding to the label
+    :param labels_locations: Dictionary with addres of each label
+    :param lines: list of lines in the file
+    :return: lines (the same list but with labels replaced by addresses)
+    """
     for i in range(len(lines)):
         args = listInstrArgs(lines[i])
         for arg in args:
@@ -324,11 +408,15 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
                 lines[i] = lines[i].replace(arg, str(labels_locations[arg]))
             else:
                 continue
-
     return lines
 
 
 def getRegBin(reg) -> str:
+    """
+    A helper function that converts register representation into binary representation
+    :param reg:
+    :return:
+    """
     if reg.startswith('x'):
         reg = reg.replace('x', '')
         return regs_bin[regsx[int(reg)]]
@@ -341,6 +429,12 @@ def getRegBin(reg) -> str:
 
 
 def formatImm(val: str) -> int:
+    """
+    Helper function that can recognize different representations of immediate and convert it into
+    suitable integer representation
+    :param val: string representation of immediate
+    :return: integer representation for immediate
+    """
     if val.startswith('0b'):
         val = val[2:]
         val = int(val, 2)
@@ -359,6 +453,11 @@ def formatImm(val: str) -> int:
 
 
 def isLabel(line) -> bool:
+    """
+    Helper function to decide whether the line is label or not
+    :param line: Potential label
+    :return: boolean (is the passed line a label?)
+    """
     label_pattern = re.compile('[a-zA-Z0-9]+:')
     l = label_pattern.match(line)
     if not l:
@@ -367,6 +466,11 @@ def isLabel(line) -> bool:
 
 
 def isInstr(line: str) -> bool:
+    """
+    A helper function to decide whether the line passed is an instruction or not
+    :param line: A line that might contain an instruction
+    :return: boolean (does the passed line contain an instruction?)
+    """
     for word in line.split():
         for Instruction_type, instructions in all_instructions.items():
             for inst in instructions:
@@ -397,7 +501,7 @@ def parseSTypeArgs(args: str) -> list:
         warn('Could not parse or match S type inst.')
     return args_out
 
-# intst is a list of instructions in binary
+# insts is a list of instructions in binary
 def writeOutText(file_name: str, insts):
     # TODO make a check if file already exists and ask to overwrite. Now overwrites
     try:
@@ -408,7 +512,7 @@ def writeOutText(file_name: str, insts):
     except OSError as ex:
         log('Could not write assembled program. IO Error %s' % ex, 'ERROR')
 
-# intst is a list of instructions in binary
+# insts is a list of instructions in binary
 def writeOutBinary(file_name: str, insts):
     with open(file_name, 'wb') as file:
         for inst in insts:
@@ -429,6 +533,12 @@ def parseArgs() -> dict:
 
 
 def twos_comp(val, bits):
+    """
+    A helper function that calculates two's complement
+    :param val: number to find two's comp of
+    :param bits: number of bits
+    :return: two's complement
+    """
     if (val & (1 << (bits - 1))) != 0:
         val = val - (1 << bits)
     return val
@@ -449,6 +559,11 @@ def validArgs(args):
 
 
 def stripEscapeChars(lines: list) -> list:
+    """
+    A helper function that cleans a list of lines from unwanted characters
+    :param lines: A list of lines to be cleaned
+    :return: cleaned list of lines
+    """
     cleared_lines = list()
     for line in lines:
         line_mod = line.replace('\t', ' ')

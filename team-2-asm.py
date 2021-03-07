@@ -185,6 +185,8 @@ def calculateLabels(lines) -> dict:
      :returns dict with 'label:' : address
      This assumes all instructions are real RISC-V 32-bit instructions.
      Thus, adding 4 between each instruction.
+
+     Also, writes out (.bin) and (.txt) files representing data section.
     """
     address = 0
     section = 'text'  # default section
@@ -194,7 +196,6 @@ def calculateLabels(lines) -> dict:
     label_mapping = dict()
 
     for i in range(len(lines)):
-        # if lines[i].startswith('.'):
         if lines[i] == '.data':
             address = data_start_address
             section = 'data'
@@ -222,8 +223,7 @@ def calculateLabels(lines) -> dict:
         #   3- in case of commas, there must be a space after it
         #   4- if data consist of string, it must be contained in " "
         #   5- all of the above must be in one line
-
-        # Note: Currently dosn't output .txt file
+        #   6- text must be declared last, after all numeric data
 
         # Data Section:
         elif section == 'data':
@@ -261,9 +261,13 @@ def calculateLabels(lines) -> dict:
 
     log('Located and mapped labels %s' % label_mapping)
 
-    # close files
+    # close files (.bin)
     f_bin.close()
+    # write the binary data as text:
+    writeOutDataText()
+    # close the .txt file
     f_text.close()
+    # return the labels and their addresses
     return label_mapping
 
 
@@ -291,13 +295,32 @@ def data_to_bin(line, data_type):
         writeOutDataBinary(list_of_words)
 
 
-def writeOutDataText(list_of_words):
-    for word in list_of_words:
-        word = str(word)
-        f_text.write(word + '\n')
+def writeOutDataText():
+    """
+    A method that converts .bin file of data section into .txt file
+    :return: None
+    """
+    # open the (.bin) file again to read from it
+    f_obin = open('Binary_data.bin', 'rb')
+    reading = f_obin.read()
+    print(reading)
+    # Write the same binary data as text in the (.txt) file
+    for i in range(0, len(reading), 4):
+        f_text.write(
+            myhdl.bin(int.from_bytes(reading[i:i + 4], 'little'), 32)
+        )
+        f_text.write('\n')
+    # Close the two data files.
+    f_obin.close()
 
 
 def writeOutDataBinary(list_of_words):
+    """
+    A method that takes a list of words (4 bytes) from
+    data section and writes it into .bin file
+    :param list_of_words: a list containing 4 bytes
+    :return: None
+    """
     for word in list_of_words:
         f_bin.write(word)
 
@@ -317,6 +340,13 @@ def listInstrArgs(line) -> list:
 
 
 def replaceLabels(labels_locations : dict, lines : list) -> list:
+    """
+    A method that takes lines, and replace any label in there
+    with the appropriate address corresponding to the label
+    :param labels_locations: Dictionary with addres of each label
+    :param lines: list of lines in the file
+    :return: lines (the same list but with labels replaced by addresses)
+    """
     for i in range(len(lines)):
         args = listInstrArgs(lines[i])
         for arg in args:
@@ -324,7 +354,6 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
                 lines[i] = lines[i].replace(arg, str(labels_locations[arg]))
             else:
                 continue
-
     return lines
 
 

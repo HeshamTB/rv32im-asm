@@ -70,6 +70,7 @@ def main():
 
     # replace every label with it's address
     in_lines = replaceLabels(labels, in_lines)
+    in_lines = replacePseudo(in_lines)
     print(in_lines)
 
     # start second pass:
@@ -434,16 +435,25 @@ def replacePseudo(lines: list) -> list:
             print('DEBUG INST:', first_word, 'ARGS: ', args)
             for i in range(len(args)):
                 args_padded[i] = args[i]
+            if first_word == 'call':
+                args_padded[0] = formatImm(args_padded[0])
+                args_padded[0] = int(intbv(int(args_padded[0]))[32:])
+                args_padded[0] = "{0:032b}".format(args_padded[0])
+            elif first_word == 'la':
+                args_padded[1] = formatImm(args_padded[1])
+                args_padded[1] = int(intbv(int(args_padded[1]))[32:])
+                args_padded[1] = "{0:032b}".format(args_padded[1])
             print('DEBUG PARSED ARGS', args_padded)
             converted = Pseudo_Converter(first_word, args_padded[0], args_padded[1], args_padded[2])
-            print('DEBUG',converted, type(converted))
+            print('DEBUG', converted, type(converted))
             if type(converted) == str:  # if a string then append directly to lines
-                lines_real.append(converted)
+        # TODO: this will go throgh branching insts and if the imm decimal value consists of 1s and 0s, it will convert.
+                lines_real.append(convertBinImm2DecImm(converted))
             elif type(converted) == list or type(converted) == tuple:
                 for entry in converted:
-                    lines_real.append(entry)
+                    lines_real.append(convertBinImm2DecImm(entry))
             else:
-                warn('Pseudo: Could not convert line: %s' % line)
+                warn('Pseudo: Could not convert line: %s %s' % (line, type(converted)))
         else:
             lines_real.append(line)
     return lines_real
@@ -613,6 +623,18 @@ def stripEscapeChars(lines: list) -> list:
             continue
         cleared_lines.append(line_mod)
     return cleared_lines
+
+
+def convertBinImm2DecImm(line: str) -> str:
+    words = line.split()
+    line_mod = line
+    for i, word in enumerate(words):
+        try:
+            val = int(word, 2)
+            line_mod = line_mod.replace(word, str(val))
+        except ValueError as ex:
+            pass
+    return line_mod
 
 
 def log(msg, prefix: str = 'INFO'):

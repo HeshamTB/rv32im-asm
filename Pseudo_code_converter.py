@@ -91,7 +91,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             loweroffset=offset[0:11]
             print(loweroffset)
 
-            return ('auipc x1 '+ offset[12:31], 'jalr x1 x1 '+ offset[0:11])
+            return ('auipc x1, '+ offset[12:31], 'jalr x1, x1, '+ offset[0:11])
 
 
          else:

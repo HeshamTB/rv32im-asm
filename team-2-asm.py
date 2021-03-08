@@ -62,7 +62,7 @@ def main():
 
     # delete unwanted characters
     in_lines = stripEscapeChars(in_lines)
-
+    in_lines = replacePseudo(in_lines)
     # calculate the address of each label + write the data output
     labels = calculateLabels(in_lines)
     log(labels)
@@ -231,23 +231,6 @@ def calculateLabels(lines : list[str]) -> dict:
     # store labels and their addresses
     label_mapping = dict()
 
-    # Process Pseudo instructions
-    lines_real = list()
-    from Pseudo_code_converter import isPseudo, Pseudo_Converter
-    for i, line in enumerate(lines):
-        print('LINE: '+line)
-        first_word = line.split()[0]
-        if isPseudo(first_word):
-            print('IS PSEUDO: ', first_word)
-            args = listInstrArgs(line)
-            args_padded = ['', '', '']
-            print('ARGS: ', args)
-            for i in range(len(args)):
-                args_padded[i] = args[i]
-            print('PARSED ARGS', args_padded)
-        else:
-            lines_real.append(line)
-    exit(25)
     # Determine whether this is text or data segment
     for i in range(len(lines)):
         if lines[i] == '.data':
@@ -411,7 +394,7 @@ def listInstrArgs(line) -> list:
     return args
 
 
-def replaceLabels(labels_locations : dict, lines : list) -> list:
+def replaceLabels(labels_locations: dict, lines: list) -> list:
     """
     A method that takes lines, and replace any label in there
     with the appropriate address corresponding to the label
@@ -427,6 +410,35 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
             else:
                 continue
     return lines
+
+
+def replacePseudo(lines: list) -> list:
+    # Process Pseudo instructions
+    lines_real = list()
+    from Pseudo_code_converter import isPseudo, Pseudo_Converter
+    for i, line in enumerate(lines):
+        print('DEBUG LINE: '+line)
+        first_word = line.split()[0].strip()
+        if isPseudo(first_word) or isPseudo(line.strip()):
+            print('DEBUG IS PSEUDO: ', first_word)
+            args = listInstrArgs(line)
+            args_padded = [0, 0, 0]
+            print('DEBUG INST:', first_word, 'ARGS: ', args)
+            for i in range(len(args)):
+                args_padded[i] = args[i]
+            print('DEBUG PARSED ARGS', args_padded)
+            converted = Pseudo_Converter(first_word, args_padded[0], args_padded[1], args_padded[2])
+            print('DEBUG',converted, type(converted))
+            if type(converted) == str:  # if a string then append directly to lines
+                lines_real.append(converted)
+            elif type(converted) == list or type(converted) == tuple:
+                for entry in converted:
+                    lines_real.append(entry)
+            else:
+                warn('Pseudo: Could not convert line: %s' % line)
+        else:
+            lines_real.append(line)
+    return lines_real
 
 
 def getRegBin(reg) -> str:

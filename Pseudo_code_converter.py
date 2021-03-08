@@ -4,6 +4,12 @@
 
 
 
+Pseudo_inserction_array = ['la', 'call', 'ret', 'mv', 'bgtz', 'beqz','ble', 'blez', 'li', 'j'
+                              ,'nop','not','neg','negw','sext','seqz','snez','sltz','sgtz']
+
+
+def isPseudo(instruction : str) -> bool:
+   return instruction in Pseudo_inserction_array
 
 
 def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need the other inputs put them as zeros

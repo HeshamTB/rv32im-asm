@@ -231,6 +231,23 @@ def calculateLabels(lines : list[str]) -> dict:
     # store labels and their addresses
     label_mapping = dict()
 
+    # Process Pseudo instructions
+    lines_real = list()
+    from Pseudo_code_converter import isPseudo, Pseudo_Converter
+    for i, line in enumerate(lines):
+        print('LINE: '+line)
+        first_word = line.split()[0]
+        if isPseudo(first_word):
+            print('IS PSEUDO: ', first_word)
+            args = listInstrArgs(line)
+            args_padded = ['', '', '']
+            print('ARGS: ', args)
+            for i in range(len(args)):
+                args_padded[i] = args[i]
+            print('PARSED ARGS', args_padded)
+        else:
+            lines_real.append(line)
+    exit(25)
     # Determine whether this is text or data segment
     for i in range(len(lines)):
         if lines[i] == '.data':

@@ -83,7 +83,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
 
       if Pseudo_code == 'call': #call instruction call faraway subroutine
          offset = str(input1)
-
+         offset = offset[::-1]
          # check if the input is valid, the offset size must be 32
          if len(offset) == 32:
             print('valid offset of',len(offset))
@@ -91,7 +91,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             loweroffset=offset[0:11]
             print(loweroffset)
 
-            return ('auipc x1, '+ offset[12:31], 'jalr x1, x1, '+ offset[0:11])
+            return ('auipc x1, '+ offset[32:12:-1], 'jalr x1, x1, '+ offset[12::-1])
 
 
          else:

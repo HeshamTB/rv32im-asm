@@ -41,8 +41,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
    #if ( (type(Pseudo_code)) == str and (type(input1))== str and (type(input2)== str) and (type(input3)== str)): #all the inputs are going to be strings i could check by converting str to int
    if 1:
       #check if the Pcode is registered
-      for i in range(len(Pseudo_inserction_array)):
-         if Pseudo_inserction_array[i] is Pseudo_code:
+      if Pseudo_code in Pseudo_inserction_array:
 
 
             Is_this_instruction_included=True
@@ -228,7 +227,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str =   'blt x0,' + string_buffer1 +', '+string_buffer2
+         output_str =   'blt x0, ' + string_buffer1 +', '+string_buffer2
          return output_str
 
       if Pseudo_code == 'beqz': #beqz branch if zero

@@ -112,13 +112,13 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
          output_str = ''
-         return ('jalr x0, x1, 0')
+         return 'jalr x0, x1, 0'
 
       if Pseudo_code == 'mv': #mv copy register instruction
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'addi ' + string_buffer1 +', '+string_buffer2+', 0'+ "'"
+         output_str =   'addi ' + string_buffer1 +', '+string_buffer2+', 0'
          return output_str
 
 
@@ -127,7 +127,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'addi ' +string_buffer1+', '+string_buffer1 +', '+string_buffer2+"'"
+         output_str =   'addi ' +string_buffer1+', '+string_buffer1 +', '+string_buffer2
 
          return output_str
 
@@ -135,7 +135,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str= "'"+'jal x0, '+string_buffer1+"'"
+         output_str=   'jal x0, '+string_buffer1
 
          return output_str
 
@@ -147,7 +147,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'"+'addi x0, x0, 0'+"'"
+         output_str =   'addi x0, x0, 0'
 
          return output_str
 
@@ -155,7 +155,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str =  "'" + 'xori '+ string_buffer1 +', '+string_buffer2+', '+'-1'+"'"
+         output_str =    'xori '+ string_buffer1 +', '+string_buffer2+', '+'-1'
 
          return output_str
 
@@ -163,7 +163,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'"+'sub '+ string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'sub '+ string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -171,7 +171,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" +'subw '+ string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =  'subw '+ string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -179,7 +179,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'addiw ' + string_buffer1 +', '+string_buffer2+', '+'0'+"'"
+         output_str =   'addiw ' + string_buffer1 +', '+string_buffer2+', '+'0'
 
          return output_str
 
@@ -187,7 +187,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'sltiu '+ string_buffer1 +', '+string_buffer2+', '+'1'+"'"
+         output_str =   'sltiu '+ string_buffer1 +', '+string_buffer2+', '+'1'
 
          return output_str
 
@@ -195,7 +195,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'sltu ' + string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'sltu ' + string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -203,7 +203,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'slt ' + string_buffer1 +', '+string_buffer2+', '+'x0'+ "'"
+         output_str =   'slt ' + string_buffer1 +', '+string_buffer2+', '+'x0'
 
          return output_str
 
@@ -211,7 +211,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'slt ' + string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'slt ' + string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -222,28 +222,28 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'blt x0,' + string_buffer1 +', '+string_buffer2+ "'"
+         output_str =   'blt x0,' + string_buffer1 +', '+string_buffer2
          return output_str
 
       if Pseudo_code == 'beqz': #beqz branch if zero
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'beq ' + string_buffer1 +', x0, '+string_buffer2 + "'"
+         output_str =   'beq ' + string_buffer1 +', x0, '+string_buffer2
          return output_str
 
       if Pseudo_code == 'ble':  # ble branch if <=
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bge ' +string_buffer2+', '+string_buffer1+', '+string_buffer3 + "'"
+         output_str =   'bge ' +string_buffer2+', '+string_buffer1+', '+string_buffer3
          return output_str
 
       if Pseudo_code == 'blez': # blez branch if <= zero
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bge x0, ' +string_buffer1+', '+string_buffer2 + "'"
+         output_str =   'bge x0, ' +string_buffer1+', '+string_buffer2
          return output_str
 
       #----------------------------------------------------------------------------------------#
@@ -254,7 +254,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bne ' + string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'bne ' + string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -263,7 +263,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bge ' + string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'bge ' + string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -272,7 +272,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'slt ' + string_buffer1 +', x0, '+string_buffer2+"'"
+         output_str =   'slt ' + string_buffer1 +', x0, '+string_buffer2
 
          return output_str
 
@@ -281,7 +281,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'blt '+string_buffer2+', '+string_buffer1+', '+string_buffer3 + "'"
+         output_str =   'blt '+string_buffer2+', '+string_buffer1+', '+string_buffer3
 
          return output_str
 
@@ -290,7 +290,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bltu '+string_buffer2+', '+string_buffer1+', '+string_buffer3 + "'"
+         output_str =   'bltu '+string_buffer2+', '+string_buffer1+', '+string_buffer3
 
          return output_str
 
@@ -299,7 +299,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bgeu '+string_buffer2+', '+string_buffer1+', '+string_buffer3 + "'"
+         output_str =   'bgeu '+string_buffer2+', '+string_buffer1+', '+string_buffer3
 
          return output_str
 
@@ -312,7 +312,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'jal x1, '+string_buffer1+"'"
+         output_str =   'jal x1, '+string_buffer1
 
          return output_str
 
@@ -321,7 +321,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'jal x0, '+string_buffer1+', '+'0'+"'"
+         output_str =   'jal x0, '+string_buffer1+', '+'0'
 
          return output_str
 
@@ -330,7 +330,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str = "'" + 'bgeu '+string_buffer2+', '+string_buffer1+', '+string_buffer3 + "'"
+         output_str =   'bgeu '+string_buffer2+', '+string_buffer1+', '+string_buffer3
 
          return output_str
 

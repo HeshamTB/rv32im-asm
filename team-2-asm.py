@@ -210,7 +210,8 @@ f_bin = open('Data-Binary.bin', 'wb')
 f_text = open('Data-Binary-text.txt', 'w')
 
 
-def calculateLabels(lines) -> dict:
+
+def calculateLabels(lines : list[str]) -> dict:
     """
      Calculate address for each label in lines
      :returns dict with 'label:' : address
@@ -570,7 +571,7 @@ def stripEscapeChars(lines: list) -> list:
         line_mod = line_mod.strip('\n')
         line_mod = line_mod.strip('\t')
         line_mod = line_mod.strip()
-        if len(line_mod) <1:
+        if len(line_mod) < 1:
             continue
         cleared_lines.append(line_mod)
     return cleared_lines

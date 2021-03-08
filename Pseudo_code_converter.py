@@ -64,7 +64,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             print('valid symbol of', len(symbol))
             return ('auipc '+input1+''+symbol[12:31],'addi '+input1+''+input1+''+symbol[0:11])
 
-
+  #leanringnfioasdk aaw
          else:
             print('none valid entrey of symbol. symbol size must be 32 bits')
 

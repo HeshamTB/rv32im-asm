@@ -73,7 +73,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          # check if the input is valid, the symbol size must be 32
          if len(symbol)==32: #this shouldn't be 32 if it not then u should sign extended it so it becomes 32
             print('valid symbol of', len(symbol))
-            return ('auipc '+input1+', '+symbol[32:12:-1], 'addi '+input1 +", "+symbol[12::-1])
+            return ('auipc '+input1+', '+symbol[32:12:-1], 'addi '+input1 + ', '+input1+", "+symbol[12::-1])
 
 
          else:

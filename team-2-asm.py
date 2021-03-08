@@ -4,6 +4,7 @@ import argparse, re
 from Instructions import Instruction, all_instructions
 from myhdl import intbv
 import myhdl
+from Pseudo_code_converter import Pseudo_Converter, isPseudo, instructionCount
 
 
 # ============================================================================================= #
@@ -62,7 +63,7 @@ def main():
 
     # delete unwanted characters
     in_lines = stripEscapeChars(in_lines)
-    in_lines = replacePseudo(in_lines)
+    #in_lines = replacePseudo(in_lines)
     # calculate the address of each label + write the data output
     labels = calculateLabels(in_lines)
     log(labels)
@@ -246,14 +247,21 @@ def calculateLabels(lines : list[str]) -> dict:
 
         if section == 'text':
             poten_label = label_pattern.match(lines[i])  # a potential label
+            debug('labeling line: %s' % lines[i])
             # if the potential label matches the pattern of labels:
             if poten_label:
+                debug('Label %s @ %s' %(poten_label.group(), address))
                 label = poten_label.group().replace(':', '')
                 # Add label with address + 4 since nothing should be after the label, We hope.
                 if address == text_start_address:  # or address == 0:
                     label_mapping[label] = address  # First line is different
                 else:
                     label_mapping[label] = address + 4
+            elif isPseudo(lines[i].split()[0]):
+                count = instructionCount(lines[i].split()[0])
+                debug('Pseudo with %s insts. PC %s, PC+ %s. %s' % (count, address, address+(count*4), lines[i]))
+                address += 4*count
+                if count == 0: warn('Could not resolve Pseudo inst: %s' % lines[i].split()[0])
             # Not a label:
             elif isInstr(lines[i]):
                 address += 4
@@ -528,7 +536,8 @@ def parseSTypeArgs(args: str) -> list:
         args_out.append(imm)
         log('Parsed S type with rs2: %s, imm: %s' % (reg_name, imm))
     else:
-        warn('Could not parse or match S type inst.')
+        #warn('Could not parse or match S type inst.')
+        pass
     return args_out
 
 # insts is a list of instructions in binary
@@ -613,6 +622,10 @@ def log(msg, prefix: str = 'INFO'):
 
 def warn(msg):
     log(msg, prefix="WARNNING")
+
+
+def debug(msg):
+    log(msg, prefix="DEBUG")
 
 
 if __name__ == '__main__':

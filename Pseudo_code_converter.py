@@ -12,6 +12,11 @@ def isPseudo(instruction : str) -> bool:
    return instruction in Pseudo_inserction_array
 
 
+def instructionCount(inst: str) -> int:
+   if inst == ('la' or 'call'): return 2
+   elif inst in Pseudo_inserction_array: return 1
+   else: return 0 # Not known
+
 def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need the other inputs put them as zeros
 
    #Our list of pseudo instrctions.

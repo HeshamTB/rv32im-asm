@@ -4,7 +4,18 @@
 
 
 
+Pseudo_inserction_array = ['la', 'call', 'ret', 'mv', 'bgtz', 'beqz','ble', 'blez', 'li', 'j'
+                              ,'nop','not','neg','negw','sext','seqz','snez','sltz','sgtz']
 
+
+def isPseudo(instruction : str) -> bool:
+   return instruction in Pseudo_inserction_array
+
+
+def instructionCount(inst: str) -> int:
+   if inst == ('la' or 'call'): return 2
+   elif inst in Pseudo_inserction_array: return 1
+   else: return 0 # Not known
 
 def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need the other inputs put them as zeros
 
@@ -35,8 +46,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
    #if ( (type(Pseudo_code)) == str and (type(input1))== str and (type(input2)== str) and (type(input3)== str)): #all the inputs are going to be strings i could check by converting str to int
    if 1:
       #check if the Pcode is registered
-      for i in range(len(Pseudo_inserction_array)):
-         if Pseudo_inserction_array[i] is Pseudo_code:
+      if Pseudo_code in Pseudo_inserction_array:
 
 
             Is_this_instruction_included=True
@@ -58,11 +68,12 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
 
       if Pseudo_code == 'la': # this is the la instruction load adress
 
-         symbol= str(input1)
+         symbol= str(input2)
+         symbol= symbol[::-1]
          # check if the input is valid, the symbol size must be 32
          if len(symbol)==32: #this shouldn't be 32 if it not then u should sign extended it so it becomes 32
             print('valid symbol of', len(symbol))
-            return ('auipc '+input1+''+symbol[12:31],'addi '+input1+''+input1+''+symbol[0:11])
+            return ('auipc '+input1+', '+symbol[32:12:-1], 'addi '+input1 + ', '+input1+", "+symbol[12::-1])
 
 
          else:
@@ -80,7 +91,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             loweroffset=offset[0:11]
             print(loweroffset)
 
-            return ('auipc x1 '+ offset[12:31], 'jalr x1 x1 '+ offset[0:11])
+            return ('auipc x1, '+ offset[12:31], 'jalr x1, x1, '+ offset[0:11])
 
 
          else:
@@ -222,7 +233,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          string_buffer1 = str(input1)
          string_buffer2 = str(input2)
          string_buffer3 = str(input3)
-         output_str =   'blt x0,' + string_buffer1 +', '+string_buffer2
+         output_str =   'blt x0, ' + string_buffer1 +', '+string_buffer2
          return output_str
 
       if Pseudo_code == 'beqz': #beqz branch if zero

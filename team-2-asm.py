@@ -4,6 +4,7 @@ import argparse, re
 from Instructions import Instruction, all_instructions
 from myhdl import intbv
 import myhdl
+from Pseudo_code_converter import Pseudo_Converter, isPseudo, instructionCount
 
 
 # ============================================================================================= #
@@ -62,13 +63,14 @@ def main():
 
     # delete unwanted characters
     in_lines = stripEscapeChars(in_lines)
-
+    #in_lines = replacePseudo(in_lines)
     # calculate the address of each label + write the data output
     labels = calculateLabels(in_lines)
     log(labels)
 
     # replace every label with it's address
     in_lines = replaceLabels(labels, in_lines)
+    in_lines = replacePseudo(in_lines)
     print(in_lines)
 
     # start second pass:
@@ -166,6 +168,7 @@ def main():
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
                         out_binary_string.append(Instruction(
                             instr=inst,
+                            frmt=inst_type,
                             rd=rd,
                             imm=imm
                         ))
@@ -179,6 +182,7 @@ def main():
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
                         out_binary_string.append(Instruction(
                             instr=inst,
+                            frmt=inst_type,
                             rd=rd,
                             imm=imm
                         ))
@@ -246,14 +250,21 @@ def calculateLabels(lines : list[str]) -> dict:
 
         if section == 'text':
             poten_label = label_pattern.match(lines[i])  # a potential label
+            debug('labeling line: %s' % lines[i])
             # if the potential label matches the pattern of labels:
             if poten_label:
+                debug('Label %s @ %s' %(poten_label.group(), address))
                 label = poten_label.group().replace(':', '')
                 # Add label with address + 4 since nothing should be after the label, We hope.
                 if address == text_start_address:  # or address == 0:
                     label_mapping[label] = address  # First line is different
                 else:
                     label_mapping[label] = address + 4
+            elif isPseudo(lines[i].split()[0]):
+                count = instructionCount(lines[i].split()[0])
+                debug('Pseudo with %s insts. PC %s, PC+ %s. %s' % (count, address, address+(count*4), lines[i]))
+                address += 4*count
+                if count == 0: warn('Could not resolve Pseudo inst: %s' % lines[i].split()[0])
             # Not a label:
             elif isInstr(lines[i]):
                 address += 4
@@ -394,7 +405,7 @@ def listInstrArgs(line) -> list:
     return args
 
 
-def replaceLabels(labels_locations : dict, lines : list) -> list:
+def replaceLabels(labels_locations: dict, lines: list) -> list:
     """
     A method that takes lines, and replace any label in there
     with the appropriate address corresponding to the label
@@ -410,6 +421,44 @@ def replaceLabels(labels_locations : dict, lines : list) -> list:
             else:
                 continue
     return lines
+
+
+def replacePseudo(lines: list) -> list:
+    # Process Pseudo instructions
+    lines_real = list()
+    from Pseudo_code_converter import isPseudo, Pseudo_Converter
+    for i, line in enumerate(lines):
+        print('DEBUG LINE: '+line)
+        first_word = line.split()[0].strip()
+        if isPseudo(first_word) or isPseudo(line.strip()):
+            print('DEBUG IS PSEUDO: ', first_word)
+            args = listInstrArgs(line)
+            args_padded = [0, 0, 0]
+            print('DEBUG INST:', first_word, 'ARGS: ', args)
+            for i in range(len(args)):
+                args_padded[i] = args[i]
+            if first_word == 'call':
+                args_padded[0] = formatImm(args_padded[0])
+                args_padded[0] = int(intbv(int(args_padded[0]))[32:])
+                args_padded[0] = "{0:032b}".format(args_padded[0])
+            elif first_word == 'la':
+                args_padded[1] = formatImm(args_padded[1])
+                args_padded[1] = int(intbv(int(args_padded[1]))[32:])
+                args_padded[1] = "{0:032b}".format(args_padded[1])
+            print('DEBUG PARSED ARGS', args_padded)
+            converted = Pseudo_Converter(first_word, args_padded[0], args_padded[1], args_padded[2])
+            print('DEBUG', converted, type(converted))
+            if type(converted) == str:  # if a string then append directly to lines
+        # TODO: this will go throgh branching insts and if the imm decimal value consists of 1s and 0s, it will convert.
+                lines_real.append(convertBinImm2DecImm(converted))
+            elif type(converted) == list or type(converted) == tuple:
+                for entry in converted:
+                    lines_real.append(convertBinImm2DecImm(entry))
+            else:
+                warn('Pseudo: Could not convert line: %s %s' % (line, type(converted)))
+        else:
+            lines_real.append(line)
+    return lines_real
 
 
 def getRegBin(reg) -> str:
@@ -499,7 +548,8 @@ def parseSTypeArgs(args: str) -> list:
         args_out.append(imm)
         log('Parsed S type with rs2: %s, imm: %s' % (reg_name, imm))
     else:
-        warn('Could not parse or match S type inst.')
+        #warn('Could not parse or match S type inst.')
+        pass
     return args_out
 
 # insts is a list of instructions in binary
@@ -577,6 +627,18 @@ def stripEscapeChars(lines: list) -> list:
     return cleared_lines
 
 
+def convertBinImm2DecImm(line: str) -> str:
+    words = line.split()
+    line_mod = line
+    for i, word in enumerate(words):
+        try:
+            val = int(word, 2)
+            line_mod = line_mod.replace(word, str(val))
+        except ValueError as ex:
+            pass
+    return line_mod
+
+
 def log(msg, prefix: str = 'INFO'):
     if verbose or prefix == 'ERROR':
         print("[%s] %s" % (prefix, msg))
@@ -584,6 +646,10 @@ def log(msg, prefix: str = 'INFO'):
 
 def warn(msg):
     log(msg, prefix="WARNNING")
+
+
+def debug(msg):
+    log(msg, prefix="DEBUG")
 
 
 if __name__ == '__main__':

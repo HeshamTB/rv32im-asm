@@ -182,6 +182,7 @@ def main():
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
                         out_binary_string.append(Instruction(
                             instr=inst,
+                            frmt=inst_type,
                             rd=rd,
                             imm=imm
                         ))

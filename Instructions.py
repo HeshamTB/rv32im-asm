@@ -77,7 +77,6 @@ class Instruction:
         elif self.frmt == 'J':
             opcode = '1101111'
             temp = self.imm[::-1]
-            temp = temp[19] + temp  # set bit 20 to be the same as bit 19 (sign extension by one bit)
             imm_20 = temp[20]
             imm_19 = temp[19:11:-1]
             imm_11 = temp[11]

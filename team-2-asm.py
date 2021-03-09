@@ -71,7 +71,7 @@ def main():
     # replace every label with it's address
     in_lines = replaceLabels(labels, in_lines)
     in_lines = replacePseudo(in_lines)
-    print(in_lines)
+    log(in_lines)
 
     # start second pass:
     address = text_start_address
@@ -357,7 +357,7 @@ def data_to_bin(line, data_type):
     else:  # Numeric data (either word or half or ... etc)
         list_of_words = list()
         for n in range(len(line)):
-            list_of_words.append(int(line[n]).to_bytes(data_types[data_type]//4, byteorder='little'))
+            list_of_words.append(int(line[n]).to_bytes(data_types[data_type], byteorder='little'))
 
         writeOutDataBinary(list_of_words)  # Write the output into (.bin) file
 

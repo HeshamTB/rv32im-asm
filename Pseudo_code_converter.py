@@ -91,7 +91,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             loweroffset=offset[0:11]
             print(loweroffset)
 
-            return ('auipc x1, '+ offset[31:11:-1], 'jalr x1, x1, '+ offset[11::-1])
+            return ('auipc x1, '+ offset[32:11:-1], 'jalr x1, x1, '+ offset[12::-1])
 
 
          else:
@@ -319,13 +319,13 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
 
    # jal jr jalr tail
 
-      if Pseudo_code == 'jal':
-         string_buffer1 = str(input1)
-         string_buffer2 = str(input2)
-         string_buffer3 = str(input3)
-         output_str =   'jal x1, '+string_buffer1
-
-         return output_str
+      # if Pseudo_code == 'jal':
+      #    string_buffer1 = str(input1)
+      #    string_buffer2 = str(input2)
+      #    string_buffer3 = str(input3)
+      #    output_str =   'jal x1, '+string_buffer1
+      #
+      #    return output_str
 
 
       if Pseudo_code == 'jr':

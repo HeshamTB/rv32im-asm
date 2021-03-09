@@ -15,24 +15,19 @@ main:
 	addi	a1, zero, 8
 	call sort
 
-
 	la	a1, exitmsg
 	addi	a2, zero, 31
 	call print
 
-
         addi    a0, x0, 0
         addi    a7, x0, 93
         ecall
-
 
 print:
         addi  a0, x0, 1
         addi  a7, x0, 64
         ecall
         ret
-
-
 
 clear:
 	mv	t0, a1

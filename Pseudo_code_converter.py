@@ -13,7 +13,7 @@ def isPseudo(instruction : str) -> bool:
 
 
 def instructionCount(inst: str) -> int:
-   if inst == ('la' or 'call'): return 2
+   if inst == 'call' or inst == 'la': return 2
    elif inst in Pseudo_inserction_array: return 1
    else: return 0 # Not known
 
@@ -73,7 +73,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
          # check if the input is valid, the symbol size must be 32
          if len(symbol)==32: #this shouldn't be 32 if it not then u should sign extended it so it becomes 32
             print('valid symbol of', len(symbol))
-            return ('auipc '+input1+', '+symbol[32:12:-1], 'addi '+input1 + ', '+input1+", "+symbol[12::-1])
+            return ('auipc '+input1+', '+symbol[32:11:-1], 'addi '+input1 + ', '+input1+", "+symbol[12::-1])
 
 
          else:
@@ -91,7 +91,7 @@ def Pseudo_Converter(Pseudo_code,input1=0,input2=0,input3=0): #if you don't need
             loweroffset=offset[0:11]
             print(loweroffset)
 
-            return ('auipc x1, '+ offset[32:12:-1], 'jalr x1, x1, '+ offset[12::-1])
+            return ('auipc x1, '+ offset[31:11:-1], 'jalr x1, x1, '+ offset[11::-1])
 
 
          else:

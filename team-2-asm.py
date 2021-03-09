@@ -162,7 +162,7 @@ def main():
                     elif inst_type == 'U':  # Reg, Imm
                         rd = getRegBin(args[0])
                         imm = formatImm(args[1])
-                        imm = imm - address
+                        #imm = imm - address
                         imm = int(intbv(imm)[20:])
                         imm = "{0:020b}".format(imm)
                         log('PC: %s, inst: %s, rd: %s, imm: %s' % (address, inst, rd, imm))
@@ -259,7 +259,7 @@ def calculateLabels(lines : list[str]) -> dict:
                 if address == text_start_address:  # or address == 0:
                     label_mapping[label] = address  # First line is different
                 else:
-                    label_mapping[label] = address + 4
+                    label_mapping[label] = address
             elif isPseudo(lines[i].split()[0]):
                 count = instructionCount(lines[i].split()[0])
                 debug('Pseudo with %s insts. PC %s, PC+ %s. %s' % (count, address, address+(count*4), lines[i]))
@@ -426,6 +426,7 @@ def replaceLabels(labels_locations: dict, lines: list) -> list:
 def replacePseudo(lines: list) -> list:
     # Process Pseudo instructions
     lines_real = list()
+    count = text_start_address
     from Pseudo_code_converter import isPseudo, Pseudo_Converter
     for i, line in enumerate(lines):
         print('DEBUG LINE: '+line)
@@ -439,10 +440,12 @@ def replacePseudo(lines: list) -> list:
                 args_padded[i] = args[i]
             if first_word == 'call':
                 args_padded[0] = formatImm(args_padded[0])
+                args_padded[0] = args_padded[0] - count
                 args_padded[0] = int(intbv(int(args_padded[0]))[32:])
                 args_padded[0] = "{0:032b}".format(args_padded[0])
             elif first_word == 'la':
                 args_padded[1] = formatImm(args_padded[1])
+                args_padded[1] = args_padded[1] - count
                 args_padded[1] = int(intbv(int(args_padded[1]))[32:])
                 args_padded[1] = "{0:032b}".format(args_padded[1])
             print('DEBUG PARSED ARGS', args_padded)
@@ -451,9 +454,13 @@ def replacePseudo(lines: list) -> list:
             if type(converted) == str:  # if a string then append directly to lines
         # TODO: this will go throgh branching insts and if the imm decimal value consists of 1s and 0s, it will convert.
                 lines_real.append(convertBinImm2DecImm(converted))
+                count += 4
             elif type(converted) == list or type(converted) == tuple:
                 for entry in converted:
                     lines_real.append(convertBinImm2DecImm(entry))
+                    count += 4
+            elif isInstr(line):
+                count += 4
             else:
                 warn('Pseudo: Could not convert line: %s %s' % (line, type(converted)))
         else:

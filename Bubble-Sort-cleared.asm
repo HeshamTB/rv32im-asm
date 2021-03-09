@@ -4,7 +4,6 @@ main:
 	la	a0, A2
 	addi	a1, x0, 8
 	call clear
-
 	la	a0, A1
 	la	a1, A2
 	call copy
